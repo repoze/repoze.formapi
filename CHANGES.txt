@@ -1,0 +1,27 @@
+Changelog
+=========
+
+
+Head
+~~~~
+
+- Added logic to allow registering and acquiring template API
+  components from templates. [malthe]
+
+- Changed the Skin Template View to be a class, and added a minimal
+  interface ISkinTemplate to access the template path [seletz]
+
+- Fixed a bug where we did not tear down the tests correctly [seletz]
+
+- Fixed bug where the INewRequest event handler would call
+  templates when checking for their existence [seletz]
+
+
+0.1 (2008-09-25)
+~~~~~~~~~~~~~~~~
+
+- Initial release [malthe]
+
+- Added support to dynamically register templates if they
+  are added to a registered template directory [seletz]
+
