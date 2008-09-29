@@ -1,10 +1,12 @@
 from zope import interface
+from zope import schema
 
 class ValidationError(Exception):
-    """Validation error. Represents one or more validation errors,
-    formatted as ``(field, error_msg)``."""
+    """Represents a field validation error."""
 
     def __init__(self, field, error_msg):
+        if not isinstance(error_msg, unicode):
+            error_msg = unicode(error_msg)
         self.field = field
         self.error_msg = error_msg
 
@@ -12,42 +14,39 @@ class ValidationError(Exception):
         return '<%s field="%s" %s>' % (
             type(self).__name__, self.field.__name__, repr(self.error_msg))
 
-class IField(interface.Interface):
-    """Form field."""
+    def __str__(self):
+        return str(self.error_msg)
     
-    label = interface.Attribute(
-        """Field label.""")
+    def __unicode__(self):
+        return self.error_msg
+    
+class IField(schema.interfaces.IField):
+    """Bound form field."""
 
-    description = interface.Attribute(
-        """Field description.""")
+    name = interface.Attribute(
+        """Field name.""")
 
     value = interface.Attribute(
         """Field value.""")
 
+    error = interface.Attribute(
+        """Error message, or ``None`` if no error.""")
+    
     def render():
         """Renders a form field widget for this field."""
         
-class IModel(interface.Interface):
-    """Form model."""
-
-    def __init__(request):
-        """Initialize model."""
-
-    def validate_form():
-        """Validate all form fields."""
-
 class IForm(interface.Interface):
-    """Form."""
+    """Form class. Iteration yields bound form fields."""
 
-    def __init__(model, context=None, prefix=None):
-        """Creates new form object with fields based on the provided
-        ``model`` (see ``IModel``). If ``context`` is non-trivial,
-        it's expected to provide form field values using attribute,
-        then dictionary lookup."""
-    
-    def validate(request):
-        """Validate form with values from the passed
-        request-object. Raises a validation error if there were errors
-        (exception instance provides a list-like interface to
+    def __init__(request=None, model=None, prefix=None):
+        """Creates new form instance. If ``model`` is non-trivial,
+        it's expected to provide default form field values using
+        attribute, then dictionary lookup."""
+
+    def validate():
+        """Validate form. Returns a dictionary that maps field name to
         validation errors."""
 
+class IWidget(interface.Interface):
+    """Callable which returns HTML for a form field. Should be
+    registered as a component that adapts (form, field)."""
