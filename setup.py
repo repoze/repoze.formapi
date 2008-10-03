@@ -20,7 +20,7 @@ def read(*rnames):
 
 setup(name='repoze.formapi',
       version = '0.1',
-      description='Minimalistic form framework',
+      description='Minimalistic form framework based on WebOb.',
       long_description=read('README.txt') + read('src/repoze/formapi/README.txt'),
       keywords = "zope3 repoze",
       classifiers = [
