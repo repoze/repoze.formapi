@@ -82,7 +82,7 @@ The bound form field is a copy of the original field.
 The field object provides the properties needed to create a form field
 HTML.
   
-  >>> field.name, field.value, field.title, field.description
+  >>> field.name, field.value, field.label, field.help
   ('language',
    u'Ruby',
    u'Programming language',

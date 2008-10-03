@@ -90,6 +90,8 @@ def bind_field(form, field, name, errors):
     field = copy.copy(field)
     
     field.name = field.__name__ = name
+    field.label = field.title
+    field.help = field.description
     field.error = u" ".join(
         unicode(error) for error in errors) or None
     field.value = getattr(form, field.__name__)

@@ -31,7 +31,13 @@ class IField(schema.interfaces.IField):
 
     error = interface.Attribute(
         """Error message, or ``None`` if no error.""")
-    
+
+    label = interface.Attribute(
+        """Field label text .""")
+
+    help = interface.Attribute(
+        """Field help text.""")
+
     def render():
         """Renders a form field widget for this field."""
         
