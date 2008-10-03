@@ -27,29 +27,30 @@ To validate the form, instantiate it with a request and call the
 names to validation errors.
   
   >>> request = testing.Request(params={'language': u"Python"})
-  >>> LanguageForm(request).validate()
+  >>> LanguageForm(request).errors
   {}
   
 If we pass in a request that does not validate, we'll see a validation
 error in the returned dictionary.
 
   >>> request = testing.Request(params={'language': u"Ruby"})
-  >>> LanguageForm(request).validate()
+  >>> LanguageForm(request).errors
   {'language': [<ValidationError field="language" u'Bad language: Ruby.'>]}
 
 Upon form instantiation, we can provide a ``context`` instance from
 which we'll draw default values.
 
-  >>> class model:
-  ...     language = u"Python"
+  >>> class Model:
+  ...     def __init__(self):
+  ...         self.language = u"Python"
 
 The default value is only used if the field is not set in the request.
   
-  >>> LanguageForm(request, context=model()).validate()
+  >>> LanguageForm(request, context=Model()).errors
   {'language': [<ValidationError field="language" u'Bad language: Ruby.'>]}
 
   >>> request = testing.Request()
-  >>> LanguageForm(request, context=model()).validate()
+  >>> LanguageForm(request, context=Model()).errors
   {}
 
   >>> language_form = LanguageForm(request, prefix="prefix", action="action")
@@ -65,8 +66,8 @@ Form fields
 A form fields class is available to access bound form field; these
 extend the form field with value and error status.
 
-  >>> request = testing.Request(params={'language': u"Ruby"})
-  >>> language_form = LanguageForm(request)
+  >>> request = testing.Request(params={'prefix.language': u"Ruby"})
+  >>> language_form = LanguageForm(request, prefix='prefix')
   >>> from repoze.formapi import Fields
   >>> fields = language_form.fields
 
@@ -83,7 +84,7 @@ The field object provides the properties needed to create a form field
 HTML.
   
   >>> field.name, field.value, field.label, field.help
-  ('language',
+  ('prefix.language',
    u'Ruby',
    u'Programming language',
    u'Which language will be used for this project.')
@@ -119,4 +120,4 @@ We can register components that register form field widgets.
   >>> component.provideAdapter(string_widget)
 
   >>> print field.render()
-  <input type="text" name="language" value="Ruby" />
+  <input type="text" name="prefix.language" value="Ruby" />

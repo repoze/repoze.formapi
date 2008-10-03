@@ -5,6 +5,8 @@ from zope import schema
 import interfaces
 import copy
 
+marker = object()
+
 def validator(*fields):
     def decorator(validator):
         def func(self):
@@ -20,6 +22,8 @@ def validator(*fields):
 class Form(object):
     interface.implements(interfaces.IForm)
 
+    submitted = False
+    
     def __init__(self, request=None, context=None, prefix=None, action=u""):
         fields = []
 
@@ -28,6 +32,9 @@ class Form(object):
             self.submit = "%s.submit" % prefix
         else:
             self.submit = "submit"
+
+        if request is not None:
+            self.submitted = bool(request.params.get(self.submit))
         
         # merge dicts
         items = type(self).__dict__.items()
@@ -50,11 +57,13 @@ class Form(object):
             if prefix is not None:
                 name = ".".join((prefix, name))
             if request is not None:
-                value = request.params.get(name)
-            elif context is not None:
-                value = context.__dict__.get(field.__name__)
+                value = request.params.get(name, marker)
             else:
-                value = None
+                value = marker
+            if value is marker and context is not None:
+                value = context.__dict__.get(field.__name__, marker)
+            if value is marker:
+                value = field.default
             setattr(form, field.__name__, value)
             
         # validate
@@ -71,14 +80,18 @@ class Form(object):
         def iterator():
             for field in fields:
                 errors = errors_by_field.get(field.__name__, ())
-                yield bind_field(form, field, field.__name__, errors)
+                name = field.__name__
+                if prefix is not None:
+                    name = ".".join((prefix, name))
+                yield bind_field(form, field, name, errors)
             
         self.__iterator__ = iterator
         
     def __iter__(self):
         return self.__iterator__()
 
-    def validate(self):
+    @property
+    def errors(self):
         return dict((field.__name__, field.errors) for field in self \
                     if field.errors)
 
@@ -89,7 +102,7 @@ class Form(object):
 def bind_field(form, field, name, errors):
     field = copy.copy(field)
     
-    field.name = field.__name__ = name
+    field.name = name
     field.label = field.title
     field.help = field.description
     field.error = u" ".join(

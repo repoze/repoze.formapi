@@ -51,10 +51,10 @@ class IForm(interface.Interface):
 
     def __iter__():
         """Yields bound form fields (see ``IField``)."""
-        
-    def validate():
+
+    errors = interface.Attribute(
         """Validate form. Returns a dictionary that maps field name to
-        validation errors."""
+        validation errors.""")
 
     fields = interface.Attribute(
         """Returns an ``IFields`` instance for this form.""")
