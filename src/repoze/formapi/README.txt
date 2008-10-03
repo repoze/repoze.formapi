@@ -37,7 +37,7 @@ error in the returned dictionary.
   >>> LanguageForm(request).validate()
   {'language': [<ValidationError field="language" u'Bad language: Ruby.'>]}
 
-Upon form instantiation, we can provide a ``model`` instance from
+Upon form instantiation, we can provide a ``context`` instance from
 which we'll draw default values.
 
   >>> class model:
@@ -45,12 +45,19 @@ which we'll draw default values.
 
 The default value is only used if the field is not set in the request.
   
-  >>> LanguageForm(request, model=model).language
-  u'Ruby'
+  >>> LanguageForm(request, context=model()).validate()
+  {'language': [<ValidationError field="language" u'Bad language: Ruby.'>]}
 
   >>> request = testing.Request()
-  >>> LanguageForm(request, model=model).language
-  u'Python'
+  >>> LanguageForm(request, context=model()).validate()
+  {}
+
+  >>> language_form = LanguageForm(request, prefix="prefix", action="action")
+  >>> language_form.action
+  'action'
+
+  >>> language_form.submit
+  'prefix.submit'
   
 Form fields
 -----------
@@ -61,7 +68,7 @@ extend the form field with value and error status.
   >>> request = testing.Request(params={'language': u"Ruby"})
   >>> language_form = LanguageForm(request)
   >>> from repoze.formapi import Fields
-  >>> fields = Fields(language_form)
+  >>> fields = language_form.fields
 
 Individual fields are accessed using attribute lookup.
   

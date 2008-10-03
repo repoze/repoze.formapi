@@ -36,17 +36,30 @@ class IField(schema.interfaces.IField):
         """Renders a form field widget for this field."""
         
 class IForm(interface.Interface):
-    """Form class. Iteration yields bound form fields."""
+    """Form class."""
 
-    def __init__(request=None, model=None, prefix=None):
+    def __init__(request=None, model=None, prefix=None, action=u""):
         """Creates new form instance. If ``model`` is non-trivial,
         it's expected to provide default form field values using
         attribute, then dictionary lookup."""
 
+    def __iter__():
+        """Yields bound form fields (see ``IField``)."""
+        
     def validate():
         """Validate form. Returns a dictionary that maps field name to
         validation errors."""
 
+    fields = interface.Attribute(
+        """Returns an ``IFields`` instance for this form.""")
+        
+    action = interface.Attribute(
+        """Form action string.""")
+
+    submit = interface.Attribute(
+        """Form submit name; if `prefix` is set, this will be
+        '%s(prefix)s.submit', else 'submit'.""")
+    
 class IWidget(interface.Interface):
     """Callable which returns HTML for a form field. Should be
     registered as a component that adapts (form, field)."""

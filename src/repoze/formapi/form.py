@@ -20,50 +20,81 @@ def validator(*fields):
 class Form(object):
     interface.implements(interfaces.IForm)
 
-    def __init__(self, request, model=None, prefix=None):
+    def __init__(self, request=None, context=None, prefix=None, action=u""):
+        fields = []
+
+        self.action = action
+        if prefix is not None:
+            self.submit = "%s.submit" % prefix
+        else:
+            self.submit = "submit"
+        
+        # merge dicts
+        items = type(self).__dict__.items()
+        if context is not None:
+            items.extend(type(context).__dict__.items())
+
         # initialize field names
-        for name, field in type(self).__dict__.items():
+        for name, field in items:
+            if name.startswith('_'):
+                continue
+            
             if schema.interfaces.IField.providedBy(field):
                 field.__name__ = name
+                fields.append(field)
 
-        # set form field values
-        for field in self:
+        # set form field values on form instance copy
+        form = copy.copy(self)
+        for field in fields:
             name = field.__name__
             if prefix is not None:
-                name = ".".join(prefix, name)
-            value = request.params.get(name)
-            if value is None and model is not None:
-                value = getattr(model, field.__name__, None)
-            setattr(self, field.__name__, value)
-
-    def __iter__(self):
-        errors = self.validate()
-        for name, field in type(self).__dict__.items():
-            if schema.interfaces.IField.providedBy(field):
-                error = u" ".join(
-                    unicode(error) for error in errors.get(name, ()))
-                yield bind_field(self, field, name, error or None)
-
-    def validate(self):
+                name = ".".join((prefix, name))
+            if request is not None:
+                value = request.params.get(name)
+            elif context is not None:
+                value = context.__dict__.get(field.__name__)
+            else:
+                value = None
+            setattr(form, field.__name__, value)
+            
+        # validate
         errors = []
         for name, validator in type(self).__dict__.items():
             if getattr(validator, '__validator__', False):
-                for error in validator(self):
+                for error in validator(form):
                     errors.append(error)
 
-        by_field = {}
+        errors_by_field = {}
         for error in errors:
-            by_field.setdefault(error.field.__name__, []).append(error)
-                    
-        return by_field
+            errors_by_field.setdefault(error.field.__name__, []).append(error)
 
-def bind_field(form, field, name, error):
+        def iterator():
+            for field in fields:
+                errors = errors_by_field.get(field.__name__, ())
+                yield bind_field(form, field, field.__name__, errors)
+            
+        self.__iterator__ = iterator
+        
+    def __iter__(self):
+        return self.__iterator__()
+
+    def validate(self):
+        return dict((field.__name__, field.errors) for field in self \
+                    if field.errors)
+
+    @property
+    def fields(self):
+        return Fields(self)
+    
+def bind_field(form, field, name, errors):
     field = copy.copy(field)
     
     field.name = field.__name__ = name
-    field.error = error
+    field.error = u" ".join(
+        unicode(error) for error in errors) or None
     field.value = getattr(form, field.__name__)
-        
+    field.errors = errors
+    
     def render():
         return component.getMultiAdapter(
             (form, field), interfaces.IWidget)
