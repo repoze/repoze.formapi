@@ -1,11 +1,9 @@
 Overview
 ========
 
-The ``repoze.formapi`` provides a form abstraction layer based on
-``zope.schema``.
+The ``repoze.formapi`` provides a form library which integrates with
+HTML forms instead of abstracting them away.
 
-Note: Request-objects must be WebOb-compatible, e.g. provide a ``params``
-attribute which is a dict-like interface to the request parameters.
-
+On the server-side, forms are defined using simple Python structures.
 
 
