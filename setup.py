@@ -49,5 +49,5 @@ setup(name='repoze.formapi',
           ],
       include_package_data = True,
       zip_safe = False,
-      test_suite="repoze.formapi.tests.test_doctests.test_suite",
+      test_suite="repoze.formapi.tests.test_suite",
       )
