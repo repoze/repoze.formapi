@@ -54,6 +54,30 @@ def resolve_name(name, data):
     return obj
 
 
+class ValidationErrors(dict):
+    """Validation error dict
+
+    This is a ``dict``-like object which evaluates to ``True`` if
+    a key contains a non-None value.
+
+        >>> from repoze.formapi.converter import ValidationErrors
+        >>> errors = ValidationErrors()
+
+        >>> errors["foo"] = dict(bar=42, fuz=12)
+        >>> bool(errors)
+        True
+
+
+        >>> errors["foo"] = dict(bar=None, fuz=None)
+        >>> bool(errors)
+        False
+    """
+    def __nonzero__(self):
+        for path in path_iterator(self):
+            if resolve_name(path, self) is not None:
+                return True
+        return False
+
 def store_item(name, value, data):
     """Set items in a dict using a ``path``
 
@@ -100,16 +124,19 @@ def convert_int(name, value):
     except ValueError:
         return None, "Error converting value to integer"
 
+
 def convert_float(name, value):
     try:
         return int(value), None
     except ValueError:
         return None, "Error converting value to float"
 
-type_converters={
-        str:   lambda name, value: (value, None),
-        int:   convert_int,
-        float: convert_float,
+
+type_converters = {
+        unicode:    lambda name, value: (value, None),
+        str:        lambda name, value: (value, None),
+        int:        convert_int,
+        float:      convert_float,
 }
 
 
@@ -170,9 +197,13 @@ def convert(params, fields):
         >>> resolve_name("user.age", errors)
         'Error converting value to integer'
 
-    Note that the ``data` dict is populated with ``None`` values as a missing value::
+    Note that the ``data`` and ``errors`` dict is populated with ``None``
+    values as a missing value, even if we have no parameters::
 
+        >>> data, errors = convert((), fields)
         >>> data
+        {'user': {'nick': None, 'age': None, 'name': None}}
+        >>> errors
         {'user': {'nick': None, 'age': None, 'name': None}}
 
     This was simple.  Now let's consider this field structure::
@@ -223,15 +254,18 @@ def convert(params, fields):
     data = dict()
     errors = dict()
 
-    # initialize data dict
+    # initialize data and errors dict
     for path in path_iterator(fields):
         data_type = resolve_name(path, fields)
         if type(data_type) == list:
             store_item(path, list(), data)
+            store_item(path, list(), errors)
         elif type(data_type) == tuple:
             store_item(path, tuple(), data)
+            store_item(path, tuple(), errors)
         else:
             store_item(path, None, data)
+            store_item(path, None, errors)
 
     for param in params:
         name, value = param

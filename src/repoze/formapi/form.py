@@ -1,18 +1,15 @@
 from collections import defaultdict
 
 import types
+import converter
 
-def convert(params, fields):
-    """XXX: Temporary implementation."""
-    
-    return dict(params), dict((key, None) for key in params if not key)
 
 class Form(object):
     """Base form class. Optionally pass a dictionary as ``data`` and a
     WebOb-like request object as ``request``."""
-    
+
     fields = {}
-    
+
     def __init__(self, data=None, request=None):
         if data is None:
             data = defaultdict(lambda: None)
@@ -25,10 +22,10 @@ class Form(object):
         else:
             params = ()
 
-        data, errors = convert(params, self.fields)
+        data, errors = converter.convert(params, self.fields)
         self.data.update(data)
         self.errors = errors
-        
+
     def validate(self):
         """Validates the request against the form fields. Returns
         ``True`` if all fields validate, else ``False``."""
@@ -40,9 +37,7 @@ class Form(object):
         for name, validator in type(self).__dict__.items():
             if getattr(validator, '__validator__', False):
                 for error in validator(self):
-                    # XXX: implement traversing of error dictionary
-                    # and handling of sequence types
-                    self.errors[error.field] = error.msg
+                    converter.store_item(error.field, error.msg, self.errors)
 
         return not self.errors
 

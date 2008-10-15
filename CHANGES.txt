@@ -5,6 +5,13 @@ Changelog
 Head
 ~~~~
 
+- Integrated the converter into the ``form` module. [seletz]
+
+- Added ``ValidationErrors`` object, which evaluates to True if validation
+  errors occured. [seletz]
+
+- Added ``unicode`` converter. [seletz]
+
 - Added ``converter`` module to support converting and validating request
   parameters sent by a form. [seletz]
 
