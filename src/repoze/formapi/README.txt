@@ -102,3 +102,69 @@ The error message is available in the ``errors`` dictionary.
 
   >>> form.errors['year']
   u"Must be an 80's tape."
+
+Dynamic data objects
+--------------------
+
+We can bind a context object to a data object by using the dynamic
+data object. This technique can be used to create edit or add-forms.
+
+To illustrate this, let's define a content object. We'll hardcode
+default values for simplicity.
+
+  >>> class Tape(object):
+  ...    artist = u'Bachman-Turner Overdrive'
+  ...    title = u'Four Wheel Drive'
+  ...    asin = 'B000001FL8'
+  ...    year = 1975
+  ...    playtime = 33.53
+
+We can now create a data proxy for an instance of this class.
+  
+  >>> tape = Tape()
+  >>> proxy = formapi.Proxy(tape)
+
+With no further intervention, this data object acts as a proxy to read
+and write attributes on the content object.
+
+  >>> proxy.title
+  u'Four Wheel Drive'
+  
+  >>> proxy.title = u'Motorcity Detroit USA Live'
+  
+  >>> tape.title
+  u'Motorcity Detroit USA Live'
+
+If we want to have more control over this process, we can subclass and
+define descriptors.
+
+The following example defines custom behavior for the ``title``
+attribute; values are uppercased, before they're set on the context.
+
+  >>> class TapeProxy(formapi.Proxy):
+  ...     def get_title(self):
+  ...         return self.context.title
+  ...
+  ...     def set_title(self, value):
+  ...         self.context.title = value.upper()
+  ...
+  ...     title = property(get_title, set_title)
+
+  >>> proxy = TapeProxy(tape)
+
+Now if we use this proxy object, we'll see that the descriptor is used
+to read and write the attribute.
+  
+  >>> proxy.title = u'Motorcity Detroit USA Live'
+  
+  >>> tape.title
+  u'MOTORCITY DETROIT USA LIVE'
+
+When instantiating a form, you can pass in a proxy object instead of
+``data``. This binds the data object to the proxy.
+  
+  >>> form = EightiesTapeForm(proxy, request=request)
+
+  >>> form.data['title'] = u'Four Wheel Drive'
+  >>> form.data['title']
+  u'FOUR WHEEL DRIVE'  

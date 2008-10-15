@@ -4,6 +4,8 @@ import doctest
 OPTIONFLAGS = (doctest.ELLIPSIS |
                doctest.NORMALIZE_WHITESPACE)
 
+from repoze.formapi.converter import convert
+
 class Request:
     application_url = 'http://app'
     def __init__(self, environ=None, params=None):
@@ -13,9 +15,6 @@ class Request:
         if params is None:
             params = {}
         self.params = params
-
-from repoze.formapi.converter import convert
-
 
 class TestDataConverter(unittest.TestCase):
     def setUp(self):
@@ -129,19 +128,20 @@ class TestDataConverter(unittest.TestCase):
         self.assertEqual(value, None)
         self.assertEqual(error, "Error converting value to integer")
 
-
-
 def test_suite():
     globs = dict(Request=Request)
-
-    return unittest.TestSuite((
-            doctest.DocFileSuite(
-                "README.txt",
-                optionflags=OPTIONFLAGS,
-                globs=globs,
-                package="repoze.formapi"),
-            unittest.makeSuite(TestDataConverter))
-            )
+    
+    return unittest.TestSuite([
+        doctest.DocFileSuite(
+        'README.txt',
+        optionflags=OPTIONFLAGS,
+        globs=globs,
+        package="repoze.formapi"),
+        doctest.DocTestSuite(
+        'repoze.formapi.form',
+        optionflags=OPTIONFLAGS,
+        globs=globs),
+        unittest.makeSuite(TestDataConverter)])
 
 if __name__ == '__main__':
     unittest.main(defaultTest='test_suite')
