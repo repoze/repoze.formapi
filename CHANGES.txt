@@ -5,6 +5,9 @@ Changelog
 Head
 ~~~~
 
+- Added ``converter`` module to support converting and validating request
+  parameters sent by a form. [seletz]
+
 - Added logic to allow registering and acquiring template API
   components from templates. [malthe]
 
