@@ -84,6 +84,7 @@ All updates to the data object are transient.
 We need to invoke the ``save`` method to commit the changes.
 
   >>> form.data.save()
+  
   >>> data['title']
   u'Motorcity Detroit USA Live'
   
@@ -100,7 +101,7 @@ To add custom validation to your forms, add a form decorator.
   ...         if not 1979 < self.data['year'] < 1989:
   ...            return u"Must be an 80's tape."
 
-Let's try and violate this contraint.
+If we violate this constraint, we expect validation to fail.
   
   >>> request = Request(
   ...    params=(('year', u'1972'),))
@@ -115,8 +116,8 @@ The error message is available in the ``errors`` dictionary.
   >>> form.errors['year']
   u"Must be an 80's tape."
 
-Dynamic data objects
---------------------
+Data proxies
+------------
 
 We can bind a context object to a data object by using a proxy
 object. This technique can be used to create edit or add-forms.
@@ -151,7 +152,7 @@ If we want to have more control over this process, we can subclass and
 define descriptors.
 
 The following example defines custom behavior for the ``title``
-attribute; values are uppercased, before they're set on the context.
+attribute; the value is uppercased.
 
   >>> class TapeProxy(formapi.Proxy):
   ...     def get_title(self):
@@ -164,26 +165,39 @@ attribute; values are uppercased, before they're set on the context.
 
   >>> proxy = TapeProxy(tape)
 
-Now if we use this proxy object, we'll see that the descriptor is used
-to read and write the attribute.
+If we read and write to the ``title`` attribute of this proxy object,
+the custom getter and setter functions are used.
   
   >>> proxy.title = u'Motorcity Detroit USA Live'
+
+As would be expected from a proxy, changes are actually made to the
+underlying content object.
   
   >>> tape.title
   u'MOTORCITY DETROIT USA LIVE'
 
+Saving form data
+----------------
+  
 When instantiating a form, you can pass in a proxy object instead of
-``data``. This binds the data object to the proxy.
+``data``. This binds the data object to the proxy, but it also allows
+us to save the form data on the proxied object.
   
   >>> form = EightiesTapeForm(proxy, request=request)
 
   >>> form.data['title'] = u'Four Wheel Drive'
-  >>> form.data.save()
+
+Assignment behaves logically.
   
   >>> form.data['title']
-  u'FOUR WHEEL DRIVE'  
-
-Note that this reflects the tape object, since we saved the form data.
+  u'Four Wheel Drive'
+  
+However, if we invoke the ``save`` action, changes take effect on the
+proxied object.
+  
+  >>> form.data.save()
   
   >>> tape.title
   u'FOUR WHEEL DRIVE'
+
+  
