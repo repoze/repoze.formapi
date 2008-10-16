@@ -4,8 +4,6 @@ import doctest
 OPTIONFLAGS = (doctest.ELLIPSIS |
                doctest.NORMALIZE_WHITESPACE)
 
-from repoze.formapi.converter import convert
-
 class Request:
     application_url = 'http://app'
     def __init__(self, environ=None, params=None):
@@ -31,7 +29,7 @@ def test_suite():
             optionflags=OPTIONFLAGS,
             globs=globs),
         doctest.DocTestSuite(
-            'repoze.formapi.converter',
+            'repoze.formapi.marshalling',
             optionflags=OPTIONFLAGS,
             globs=globs)
         ])
