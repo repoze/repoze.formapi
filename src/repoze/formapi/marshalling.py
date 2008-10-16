@@ -1,12 +1,5 @@
 from collections import defaultdict
 
-class defaultdict(defaultdict):
-    """Change the representation-function. It's an implementation
-    detail that this is a ``defaultdict`` object."""
-    
-    def __repr__(self):
-        return dict.__repr__(self)
-    
 MISSING = object()
 
 def path_iterator(data):
@@ -22,14 +15,22 @@ def path_iterator(data):
         ['buz', 'foo.bar', 'foo.baz']
 
     """
+
     for key, value in data.items():
         if type(value) == dict:
             for p in path_iterator(value):
                 yield "%s.%s" % (key, p)
+        elif isinstance(value, (tuple, list)):
+            if len(value) != 1:
+                raise TypeError(
+                    "Sequence types must contain exactly one simple type.")
+            if value[0] not in (int, str, unicode, float):
+                raise TypeError(
+                    "Sequence must contain a simple type.")
+            yield key
         else:
             yield key
-
-
+            
 def resolve_name(name, data):
     """resolve the name given in the data given
 
@@ -62,30 +63,6 @@ def resolve_name(name, data):
         obj = obj[item]
 
     return obj
-
-class ValidationErrors(dict):
-    """Validation error dict
-
-    This is a ``dict``-like object which evaluates to ``True`` if
-    a key contains a non-None value.
-
-        >>> from repoze.formapi.marshalling import ValidationErrors
-        >>> errors = ValidationErrors()
-
-        >>> errors["foo"] = dict(bar=42, fuz=12)
-        >>> bool(errors)
-        True
-
-
-        >>> errors["foo"] = dict(bar=None, fuz=None)
-        >>> bool(errors)
-        False
-    """
-    def __nonzero__(self):
-        for path in path_iterator(self):
-            if resolve_name(path, self) is not None:
-                return True
-        return False
 
 def store_item(name, value, data):
     """Set items in a dict using a ``path``
@@ -132,13 +109,11 @@ def convert_int(name, value):
     except ValueError:
         return None, "Error converting value to integer"
 
-
 def convert_float(name, value):
     try:
         return int(value), None
     except ValueError:
         return None, "Error converting value to float"
-
 
 type_converters = {
         unicode:    lambda name, value: (value, None),
@@ -147,16 +122,17 @@ type_converters = {
         float:      convert_float,
 }
 
-
 def convert(params, fields):
     """convert(params, fields) -> data, errors
 
-    This function converts and validates the ``params`` tuple of (name, value)
-    pairs.  The data converted is returned in the ``data`` dict.  Errors
-    encountered during conversion are set in the ``errors`` dict.
+    This function converts and validates the ``params`` tuple of
+    (name, value) pairs.  The data converted is returned in the
+    ``data`` dict.  Errors encountered during conversion are set in
+    the ``errors`` dict.
 
-    The ``fields`` parameter is used to convert/validate the data.  It it's a
-    dict with either simple types or dicts as value, e.g::
+    The ``fields`` parameter is used to describe the data
+    structure. It's a nested dictionary that ends in simple types, or
+    a list of such, e.g.
 
         >>> fields = {
         ...     "user": {
@@ -166,29 +142,33 @@ def convert(params, fields):
         ...     }
         ... }
 
-    Using that ``schema-like`` structure, we're able to validate and convert form request
-    data::
+    Using this ``schema-like`` structure, we can convert a list of
+    form request parameters into a data structure (field marshalling).
 
-        >>> params = (("user.name", "Fred Kaputnik"), ("user.nick", "fred"),
+        >>> params = (
+        ...     ("user.name", "Fred Kaputnik"),
+        ...     ("user.nick", "fred"),
         ...     ("user.age", 42))
 
-    Note, the ``names`` in the name, value tuples of the params are ``path`` names.
+    Note that the keys of the parameter tuples are dotted paths.
 
         >>> from repoze.formapi.marshalling import convert
         >>> data, errors = convert(params, fields)
 
-    As all the tuples in ``params`` are valid, we get no error::
+    Since all the tuples in ``params`` are valid, we expect no
+    validation errors::
 
         >>> errors
         {'user': {'nick': None, 'age': None, 'name': None}}
 
-    Usually, we would request a error for a ``path``like so::
-
+    We can use the ``resolve_name`` function to traverse into the
+    errors dictionary.
+    
         >>> from repoze.formapi.marshalling import resolve_name
         >>> resolve_name("user.nick", errors) is None
         True
 
-    Ok, the data is converted w/o error.  Let's have a look::
+    To get to the marshalled field data, we use a similar approach.
 
         >>> resolve_name("user.name", data)
         'Fred Kaputnik'
@@ -197,11 +177,14 @@ def convert(params, fields):
         >>> resolve_name("user.age", data)
         42
 
-    Let's provoke a validation error::
+    To illustrate error handling, we can violate the validation
+    constraint of the ``age`` field.
 
         >>> data, errors = convert((("user.age", "ten"),), fields)
+        
         >>> resolve_name("user.age", data) is None
         True
+        
         >>> resolve_name("user.age", errors)
         'Error converting value to integer'
 
@@ -209,59 +192,63 @@ def convert(params, fields):
     default value of ``None`` for missing entries.
 
         >>> data, errors = convert((), fields)
-        >>> data['user'].keys()
-        []
 
-        >>> data['user']['nick'] is None
+        >>> 'age' in data['user']
+        False
+        
+        >>> data['user']['age'] is None
         True
         
-    This was simple.  Now let's consider this field structure::
+    The fields structure may end in a list of a simple type.
 
         >>> fields = {
         ...     "user": {
-        ...         "name": str,
-        ...         "nick": str,
-        ...         "friends": [ str, ],
+        ...         "friends": [str],
         ...     }
         ... }
 
-    Obviously, we want to have ``user.friends`` to be a a list of friends::
+    In this case, we expect the ``friends`` entry to be a list of strings::
 
-        >>> params = (("user.friends", "stefan"), ("user.friends", "malthe"))
+        >>> params = (
+        ...     ("user.friends", "stefan"),
+        ...     ("user.friends", "malthe"))
+        
         >>> data, errors = convert(params, fields)
+
+    As expected, we get a list. Note that this list items appear in
+    the order they appear in the reqeuest parameters.
+    
         >>> resolve_name("user.friends", data)
         ['stefan', 'malthe']
 
-    The same goes for tuples::
+    Tuples are also supported.
 
-        >>> fields = {
-        ...     "user": {
-        ...         "name": str,
-        ...         "nick": str,
-        ...         "points": (int, ),
-        ...     }
-        ... }
-        >>> params = (("user.points", 42), ("user.points", 10))
+        >>> fields = {"points": (int,)}
+        
+        >>> params = (("points", 42), ("points", 10))
         >>> data, errors = convert(params, fields)
-        >>> resolve_name("user.points", data)
+        
+        >>> resolve_name("points", data)
         (42, 10)
 
-    Now for something more complex. consider this field structure::
+    Sequence types may only appear as end-points. The following field
+    definition is invalid.
 
         >>> fields = {
-        ...     "user_list": [{
+        ...     "users": [{
         ...         "name": str,
-        ...         "nick": str,
-        ...     }, ]
-        ... }
+        ...         "nick": str}]
+        ...     }
 
-    Here we clearly expect a ``list of users``, e.g. a list of dicts.
-
-    Currently, we don't support that.
+        >>> convert((), fields)
+        Traceback (most recent call last):
+         ...
+        TypeError: Sequence must contain a simple type.
 
     """
+        
     data = dict()
-    errors = ValidationErrors()
+    errors = Errors()
 
     # initialize data and errors dict
     for path in path_iterator(fields):
@@ -285,7 +272,7 @@ def convert(params, fields):
         if type(data_type) in (list, tuple):
             # these merely specify the container type.  Fetch the data type
             data_type = data_type[0]
-
+            
         # fetch type converter
         converter = type_converters.get(data_type)
         if not callable(converter):
@@ -302,5 +289,37 @@ def convert(params, fields):
 
     return data, errors
 
+class Errors(dict):
+    """Form error dictionary.
 
+    This is a ``dict``-like object which evaluates to ``True`` if
+    a key contains a non-None value.
+
+        >>> from repoze.formapi.marshalling import Errors
+        >>> errors = Errors()
+
+        >>> errors["foo"] = dict(bar=42, fuz=12)
+        >>> bool(errors)
+        True
+
+
+        >>> errors["foo"] = dict(bar=None, fuz=None)
+        >>> bool(errors)
+        False
+    """
+        
+    def __nonzero__(self):
+        for path in path_iterator(self):
+            if resolve_name(path, self) is not None:
+                return True
+        return False
+
+class defaultdict(defaultdict):
+    __doc__ = defaultdict.__doc__
+    
+    def __repr__(self):
+        # change the representation-function; t's an implementation
+        # detail that this is a ``defaultdict`` object.
+        return dict.__repr__(self)
+    
 # vim: set ft=python ts=4 sw=4 expandtab : 
