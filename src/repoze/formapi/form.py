@@ -1,7 +1,5 @@
-from collections import defaultdict
-
 import types
-import marshalling
+from repoze.formapi import marshalling
 
 class Form(object):
     """Base form class. Optionally pass a dictionary as ``data`` and a
