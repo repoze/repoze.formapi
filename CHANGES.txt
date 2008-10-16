@@ -4,6 +4,9 @@ Changelog
 Head
 ~~~~
 
+- Reworked marshalling code to handle dynamic dictionary
+  keys. [malthe]
+
 - Implemented form data object which facilities the form processing
   flow from applying the request to committing changes to a context
   object. [malthe]

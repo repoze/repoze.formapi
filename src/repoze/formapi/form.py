@@ -25,8 +25,8 @@ class Form(object):
         else:
             params = ()
 
-        # convert request parameters
-        data, errors = marshalling.convert(params, self.fields)
+        # marshall request parameters
+        data, errors = marshalling.marshall(params, self.fields)
         
         self.data.update(data)
         self.errors = errors
@@ -42,10 +42,30 @@ class Form(object):
         for name, validator in type(self).__dict__.items():
             if getattr(validator, '__validator__', False):
                 for error in validator(self):
-                    marshalling.store_item(error.field, error.msg, self.errors)
+                    path = tuple(error.field.split('.'))
+                    self.errors[path] = error.msg
 
         return not self.errors
 
+class ValidationError(Exception):
+    """Represents a field validation error."""
+
+    def __init__(self, field, msg):
+        if not isinstance(msg, unicode):
+            msg = unicode(msg)
+        self.field = field
+        self.msg = msg
+
+    def __repr__(self):
+        return '<%s field="%s" %s>' % (
+            type(self).__name__, self.field, repr(self.msg))
+
+    def __str__(self):
+        return str(unicode(self))
+    
+    def __unicode__(self):
+        return self.msg
+    
 class Data(list):
     """Form data object with dictionary-like interface. If initialized
     with a ``data`` object, this will be used to provide default
@@ -60,10 +80,13 @@ class Data(list):
     def __getitem__(self, name):
         for data in reversed(self):
             try:
-                return data[name]
+                value = data[name]
             except KeyError:
                 continue
-    
+
+            if value is not None:
+                return value
+            
     def __setitem__(self, name, value):
         self.tail[name] = value
 
@@ -182,25 +205,6 @@ class Proxy(object):
     __getitem__ = __getattribute__
     __setitem__ = __setattr__
 
-class ValidationError(Exception):
-    """Represents a field validation error."""
-
-    def __init__(self, field, msg):
-        if not isinstance(msg, unicode):
-            msg = unicode(msg)
-        self.field = field
-        self.msg = msg
-
-    def __repr__(self):
-        return '<%s field="%s" %s>' % (
-            type(self).__name__, self.field, repr(self.msg))
-
-    def __str__(self):
-        return str(unicode(self))
-    
-    def __unicode__(self):
-        return self.msg
-    
 def validator(*fields):
     def decorator(validator):
         def func(self):
