@@ -1,7 +1,7 @@
 from collections import defaultdict
 
 import types
-import converter
+import marshalling
 
 class Form(object):
     """Base form class. Optionally pass a dictionary as ``data`` and a
@@ -26,7 +26,7 @@ class Form(object):
             params = ()
 
         # convert request parameters
-        data, errors = converter.convert(params, self.fields)
+        data, errors = marshalling.convert(params, self.fields)
         
         self.data.update(data)
         self.errors = errors
@@ -42,7 +42,7 @@ class Form(object):
         for name, validator in type(self).__dict__.items():
             if getattr(validator, '__validator__', False):
                 for error in validator(self):
-                    converter.store_item(error.field, error.msg, self.errors)
+                    marshalling.store_item(error.field, error.msg, self.errors)
 
         return not self.errors
 

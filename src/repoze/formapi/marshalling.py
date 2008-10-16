@@ -17,7 +17,7 @@ def path_iterator(data):
 
         >>> data = dict(foo=dict(bar=42, baz=10), buz="hello")
 
-        >>> from repoze.formapi.converter import path_iterator
+        >>> from repoze.formapi.marshalling import path_iterator
         >>> sorted(list(path_iterator(data)))
         ['buz', 'foo.bar', 'foo.baz']
 
@@ -35,7 +35,7 @@ def resolve_name(name, data):
 
     Resolve a name in a dict::
 
-        >>> from repoze.formapi.converter import resolve_name
+        >>> from repoze.formapi.marshalling import resolve_name
         >>> data = dict(foo=dict(bar=42, baz=10), buz="hello")
         >>> resolve_name("buz", data)
         'hello'
@@ -69,7 +69,7 @@ class ValidationErrors(dict):
     This is a ``dict``-like object which evaluates to ``True`` if
     a key contains a non-None value.
 
-        >>> from repoze.formapi.converter import ValidationErrors
+        >>> from repoze.formapi.marshalling import ValidationErrors
         >>> errors = ValidationErrors()
 
         >>> errors["foo"] = dict(bar=42, fuz=12)
@@ -92,7 +92,7 @@ def store_item(name, value, data):
 
     Using ``store_item`` we're able to set values using a ``path``::
 
-        >>> from repoze.formapi.converter import store_item
+        >>> from repoze.formapi.marshalling import store_item
         >>> data = dict()
         >>> store_item("user.name", "Fred Kaputnik", data)
         >>> store_item("user.nick", "fred", data)
@@ -174,7 +174,7 @@ def convert(params, fields):
 
     Note, the ``names`` in the name, value tuples of the params are ``path`` names.
 
-        >>> from repoze.formapi.converter import convert
+        >>> from repoze.formapi.marshalling import convert
         >>> data, errors = convert(params, fields)
 
     As all the tuples in ``params`` are valid, we get no error::
@@ -184,7 +184,7 @@ def convert(params, fields):
 
     Usually, we would request a error for a ``path``like so::
 
-        >>> from repoze.formapi.converter import resolve_name
+        >>> from repoze.formapi.marshalling import resolve_name
         >>> resolve_name("user.nick", errors) is None
         True
 
