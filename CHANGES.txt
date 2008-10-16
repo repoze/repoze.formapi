@@ -1,9 +1,12 @@
 Changelog
 =========
 
-
 Head
 ~~~~
+
+- Implemented form data object which facilities the form processing
+  flow from applying the request to committing changes to a context
+  object. [malthe]
 
 - Integrated the converter into the ``form` module. [seletz]
 

@@ -40,12 +40,13 @@ We pass the request to the form as keyword argument.
 
   >>> form = TapeForm(request=request)
 
-This request would set the title of the record on the data object;
-since it's a valid unicode string, we expect no validation errors.
+This request would set the title of the record on the form data
+object; since it's a valid unicode string, we expect no validation
+errors.
 
   >>> form.validate()
   True
-  
+
   >>> form.data['title']
   u'Motorcity Detroit USA Live'
 
@@ -62,7 +63,7 @@ effect we pass in a dictionary object.
   >>> form = TapeForm(data)
 
 The values are available in the ``data`` object.
-  
+
   >>> form.data['title']
   u'Four Wheel Drive'
 
@@ -75,6 +76,17 @@ object is queried.
   >>> form.data['title']
   u'Motorcity Detroit USA Live'
 
+All updates to the data object are transient.
+
+  >>> data['title']
+  u'Four Wheel Drive'
+
+We need to invoke the ``save`` method to commit the changes.
+
+  >>> form.data.save()
+  >>> data['title']
+  u'Motorcity Detroit USA Live'
+  
 Validation
 ----------
 
@@ -106,8 +118,8 @@ The error message is available in the ``errors`` dictionary.
 Dynamic data objects
 --------------------
 
-We can bind a context object to a data object by using the dynamic
-data object. This technique can be used to create edit or add-forms.
+We can bind a context object to a data object by using a proxy
+object. This technique can be used to create edit or add-forms.
 
 To illustrate this, let's define a content object. We'll hardcode
 default values for simplicity.
@@ -143,10 +155,10 @@ attribute; values are uppercased, before they're set on the context.
 
   >>> class TapeProxy(formapi.Proxy):
   ...     def get_title(self):
-  ...         return self.context.title
+  ...         return self.title
   ...
   ...     def set_title(self, value):
-  ...         self.context.title = value.upper()
+  ...         self.title = value.upper()
   ...
   ...     title = property(get_title, set_title)
 
@@ -166,5 +178,12 @@ When instantiating a form, you can pass in a proxy object instead of
   >>> form = EightiesTapeForm(proxy, request=request)
 
   >>> form.data['title'] = u'Four Wheel Drive'
+  >>> form.data.save()
+  
   >>> form.data['title']
   u'FOUR WHEEL DRIVE'  
+
+Note that this reflects the tape object, since we saved the form data.
+  
+  >>> tape.title
+  u'FOUR WHEEL DRIVE'

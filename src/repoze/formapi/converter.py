@@ -1,3 +1,13 @@
+from collections import defaultdict
+
+class defaultdict(defaultdict):
+    """Change the representation-function. It's an implementation
+    detail that this is a ``defaultdict`` object."""
+    
+    def __repr__(self):
+        return dict.__repr__(self)
+    
+MISSING = object()
 
 def path_iterator(data):
     """path_iterator(data) -> iterator
@@ -53,7 +63,6 @@ def resolve_name(name, data):
 
     return obj
 
-
 class ValidationErrors(dict):
     """Validation error dict
 
@@ -107,17 +116,16 @@ def store_item(name, value, data):
     obj = data
     if len(path):
         for item in path:
-            obj = obj.setdefault(item, dict())
+            obj = obj.setdefault(item, defaultdict(lambda: None))
 
     old_value = obj.get(key)
     if type(old_value) == list:
         obj[key].append(value)
     elif type(old_value) == tuple:
         obj[key] += (value,)
-    else:
+    elif value is not MISSING:
         obj[key] = value
-
-
+        
 def convert_int(name, value):
     try:
         return int(value), None
@@ -197,15 +205,16 @@ def convert(params, fields):
         >>> resolve_name("user.age", errors)
         'Error converting value to integer'
 
-    Note that the ``data`` and ``errors`` dict is populated with ``None``
-    values as a missing value, even if we have no parameters::
+    Note that the ``data`` and ``errors`` dictionaries provide a
+    default value of ``None`` for missing entries.
 
         >>> data, errors = convert((), fields)
-        >>> data
-        {'user': {'nick': None, 'age': None, 'name': None}}
-        >>> errors
-        {'user': {'nick': None, 'age': None, 'name': None}}
+        >>> data['user'].keys()
+        []
 
+        >>> data['user']['nick'] is None
+        True
+        
     This was simple.  Now let's consider this field structure::
 
         >>> fields = {
@@ -252,7 +261,7 @@ def convert(params, fields):
 
     """
     data = dict()
-    errors = dict()
+    errors = ValidationErrors()
 
     # initialize data and errors dict
     for path in path_iterator(fields):
@@ -264,8 +273,8 @@ def convert(params, fields):
             store_item(path, tuple(), data)
             store_item(path, tuple(), errors)
         else:
-            store_item(path, None, data)
-            store_item(path, None, errors)
+            store_item(path, MISSING, data)
+            store_item(path, MISSING, errors)
 
     for param in params:
         name, value = param

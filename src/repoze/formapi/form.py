@@ -3,26 +3,31 @@ from collections import defaultdict
 import types
 import converter
 
-
 class Form(object):
     """Base form class. Optionally pass a dictionary as ``data`` and a
     WebOb-like request object as ``request``."""
 
     fields = {}
 
-    def __init__(self, data=None, request=None):
-        if data is None:
-            data = defaultdict(lambda: None)
+    def __init__(self, data=None, context=None, request=None):
+        if context is not None:
+            if data is not None:
+                raise ValueError(
+                    "Can't provide both ``data`` and ``context``.")
 
-        self.request = request
-        self.data = data
+            # proxy the context object
+            data = Proxy(context)
 
+        self.data = Data(data)
+        
         if request is not None:
             params = request.params
         else:
             params = ()
 
+        # convert request parameters
         data, errors = converter.convert(params, self.fields)
+        
         self.data.update(data)
         self.errors = errors
 
@@ -41,6 +46,49 @@ class Form(object):
 
         return not self.errors
 
+class Data(list):
+    """Form data object with dictionary-like interface. If initialized
+    with a ``data`` object, this will be used to provide default
+    values, if not set in the ``request``. Updates to the object are
+    transient until the ``save`` method is invoked."""
+    
+    def __init__(self, data):
+        if data is not None:
+            self.append(data)
+        self.append({})
+        
+    def __getitem__(self, name):
+        for data in reversed(self):
+            try:
+                return data[name]
+            except KeyError:
+                continue
+    
+    def __setitem__(self, name, value):
+        self.tail[name] = value
+
+    @property
+    def tail(self):
+        return list.__getitem__(self, -1)
+
+    @property
+    def head(self):
+        return list.__getitem__(self, 0)
+        
+    def update(self, data):
+        """Updates the dictionary by appending ``data`` to the list at
+        the position just before the current dictionary."""
+
+        self.insert(-1, data)
+        
+    def save(self):
+        """Flattens the dictionary, saving changes to the data object."""
+
+        while len(self) > 1:
+            for name, value in self.pop(1).items():
+                self.head[name] = value
+        self.append({})
+        
 class Proxy(object):
     """Proxy object; reads and writes to attributes are forwarded to
     the provided object. Descriptors are supported: they must read and
@@ -51,19 +99,18 @@ class Proxy(object):
 
     >>> class Content(object):
     ...     pass
-    ...         
     
     >>> from repoze.formapi import Proxy
     
     >>> class ContentProxy(Proxy):
     ...     def get_test_descriptor(self):
-    ...         return self.context.test_descriptor
+    ...         return self.test_descriptor
     ...
     ...     def set_test_descriptor(self, value):
-    ...         self.context.test_descriptor = value + 1
+    ...         self.test_descriptor = value + 1
     ...
     ...     def get_get_only(self):
-    ...         return self.context.test_get_only
+    ...         return self.test_get_only
     ...
     ...     test_descriptor = property(get_test_descriptor, set_test_descriptor)
     ...     test_get_only = property(get_get_only)
@@ -73,8 +120,8 @@ class Proxy(object):
 
     We can read and write to the ``context`` attribute.
     
-    >>> proxy.context = 42
-    >>> proxy.context
+    >>> proxy.test = 42
+    >>> proxy.test
     42
 
     Descriptors have access to the original context.
@@ -91,51 +138,50 @@ class Proxy(object):
 
     Proxies provide dictionary-access to attributes.
 
-    >>> proxy['context']
+    >>> proxy['test']
     42
 
-    >>> proxy.update({
-    ...     'context': 41})
-
-    >>> proxy.context
+    >>> proxy['test'] = 41
+    >>> proxy.test
     41
-    
     """
 
     def __init__(self, context):
-        # instantiate a new proxy object from the base class, such
-        # that we know that no descriptors are defined; this is required t
-        proxy = self.__dict__['proxy'] = object.__new__(Proxy)
-        proxy.__dict__['context'] = self.__dict__['_context'] = context
+        # instantiate a base proxy object with this context
+        serf = object.__new__(Proxy)
+        object.__setattr__(serf, '_context', context)
+        object.__setattr__(self, '_context', context)
+        object.__setattr__(self, '_serf', serf)
 
-    def __getattr__(self, name):
-        prop = type(self).__dict__.get(name)
+    def __getattribute__(self, name):
+        prop = object.__getattribute__(type(self), '__dict__').get(name)
         if prop is not None:
             # call getter in the context of the proxy object
-            proxy = self.__dict__['proxy']
-            return prop.fget(proxy)
+            serf = object.__getattribute__(self, '_serf')
+            return prop.fget(serf)
         else:
-            return getattr(self.__dict__['_context'], name)
+            if name == 'update':
+                import pdb; pdb.set_trace()
+                
+            return getattr(
+                object.__getattribute__(self, '_context'), name)
         
     def __setattr__(self, name, value):
-        prop = type(self).__dict__.get(name)
+        prop = object.__getattribute__(type(self), '__dict__').get(name)
         if prop is not None:
             # property might be read-only (e.g. does not define a
             # setter); in this case we just set attribute on context.
             setter = prop.fset
             if setter is not None:
                 # call setter in the context of the proxy object
-                proxy = self.__dict__['proxy']
-                return prop.fset(proxy, value)
-        setattr(self.__dict__['_context'], name, value)
+                serf = object.__getattribute__(self, '_serf')
+                return prop.fset(serf, value)
+        setattr(
+            object.__getattribute__(self, '_context'), name, value)
 
-    __getitem__ = __getattr__
+    __getitem__ = __getattribute__
     __setitem__ = __setattr__
 
-    def update(self, d):
-        for name, value in d.items():
-            setattr(self, name, value)
-               
 class ValidationError(Exception):
     """Represents a field validation error."""
 
