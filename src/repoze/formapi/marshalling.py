@@ -157,7 +157,11 @@ def marshall(params, fields):
         except ValueError, error:
             data[path] = None
             errors[path] = error.message
-                
+        except KeyError:
+            # parameter does not match this form field definition; we
+            # can safely disregard it.
+            continue
+            
     return data, errors
 
 class Marshaller(object):
