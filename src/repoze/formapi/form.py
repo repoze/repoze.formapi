@@ -1,4 +1,4 @@
-import types
+from repoze.formapi import types
 from repoze.formapi import marshalling
 
 class Form(object):
@@ -6,8 +6,9 @@ class Form(object):
     WebOb-like request object as ``request``."""
 
     fields = {}
-
-    def __init__(self, data=None, context=None, request=None):
+    prefix_code = 'form_id'
+    
+    def __init__(self, data=None, context=None, request=None, prefix=None):
         if context is not None:
             if data is not None:
                 raise ValueError(
@@ -18,8 +19,10 @@ class Form(object):
 
         self.data = Data(data)
         
-        if request is not None:
-            params = request.params
+        # if the form was not submitted, disregard the request
+        # parameters
+        if request and request.params.get(self.prefix_code) == prefix:
+            params = request.params.items()
         else:
             params = ()
 
@@ -28,7 +31,8 @@ class Form(object):
         
         self.data.update(data)
         self.errors = errors
-
+        self.prefix = prefix
+        
     def validate(self):
         """Validates the request against the form fields. Returns
         ``True`` if all fields validate, else ``False``."""

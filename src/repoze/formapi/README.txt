@@ -87,6 +87,38 @@ We need to invoke the ``save`` method to commit the changes.
   
   >>> data['title']
   u'Motorcity Detroit USA Live'
+
+Form submission
+---------------
+
+By default, the form is assumed to be submitted; this means that the
+form data will reflect values present in the request.
+
+To change this behavior, instantiate the form with a ``prefix``
+identifying this particular form.
+
+The form is then submitted exactly when the values of the prefix code
+parameter matches this prefix; by default, this is "form_id".
+
+  >>> TapeForm.prefix_code
+  'form_id'
+
+  >>> request = Request(params=(
+  ...    ('form_id', 'tape_form'),
+  ...    ('title', u'Motorcity Detroit USA Live'),))
+
+  >>> form = TapeForm(request=request, prefix='tape_form')
+
+  >>> form.data['title']
+  u'Motorcity Detroit USA Live'  
+
+Note that the prefix must match the request prefix code value.
+
+  >>> form = TapeForm(request=request, prefix='other_form')
+  
+  >>> form.data['title'] is None
+  True
+
   
 Validation
 ----------
