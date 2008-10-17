@@ -11,10 +11,23 @@ class Request:
             environ = {}
         self.environ = environ
         if params is None:
-            params = {}
+            params = ()
+        self.params = Params(params)
+
+class Params:
+    def __init__(self, params):
         self.params = params
 
+    def __iter__(self):
+        for key, value in self.params:
+            yield key
 
+    def get(self, key, default=None):
+        return dict(self.params).get(key, default)
+
+    def items(self):
+        return self.params
+        
 def test_suite():
     globs = dict(Request=Request)
     
