@@ -1,10 +1,16 @@
-from repoze.formapi import types
+from zope import interface
+
+from repoze.formapi import interfaces
 from repoze.formapi import marshalling
+
+import types
 
 class Form(object):
     """Base form class. Optionally pass a dictionary as ``data`` and a
     WebOb-like request object as ``request``."""
 
+    interface.implements(interfaces.IForm)
+    
     fields = {}
     prefix_code = 'form_id'
     
