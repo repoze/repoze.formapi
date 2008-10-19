@@ -1,5 +1,4 @@
-from form import Form
-from form import Proxy
-from form import validator
+from form import Form, Proxy
+from form import validator, action
 
 

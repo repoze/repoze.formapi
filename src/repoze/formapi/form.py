@@ -4,6 +4,7 @@ from repoze.formapi import interfaces
 from repoze.formapi import marshalling
 
 import types
+import re
 
 class Form(object):
     """Base form class. Optionally pass a dictionary as ``data`` and a
@@ -12,7 +13,6 @@ class Form(object):
     interface.implements(interfaces.IForm)
     
     fields = {}
-    prefix_code = 'form_id'
     
     def __init__(self, data=None, context=None, request=None, prefix=None):
         if context is not None:
@@ -24,20 +24,52 @@ class Form(object):
             data = Proxy(context)
 
         self.data = Data(data)
-        
-        # if the form was not submitted, disregard the request
-        # parameters
-        if request and request.params.get(self.prefix_code) == prefix:
+
+        # find action parameters
+        if prefix is not None:
+            re_prefix = re.compile(r'^%s[._-](?P<name>.*)' % prefix)
+            action_params = {}
+            for key, value in request.params.items():
+                if key == prefix:
+                    action_params[None] = value
+                else:
+                    m = re_prefix.search(key)
+                    if m is not None:
+                        action_params[m.group('name')] = value
+
+        # initialize form actions
+        actions = self.actions = []
+        for action in type(self).__dict__.values():
+            marker = object()
+            name = getattr(action, '__action__', marker)
+            if name is not marker:
+                actions.append(Action(action, name, name in action_params))                
+
+        # conditionally apply request parameters if:
+        # 1. no prefix has been set
+        # 2. there is a submitted action
+        # 3. there are no defined actions, but a default action was submitted
+        if request is not None and (
+            prefix is None or \
+            filter(None, actions) or \
+            len(actions) == 0 and action_params.get(None) is not None):
             params = request.params.items()
         else:
             params = ()
-
+        
         # marshall request parameters
         data, errors = marshalling.marshall(params, self.fields)
         
         self.data.update(data)
         self.errors = errors
         self.prefix = prefix
+
+    def __call__(self):
+        """Calls the first submitted action and returns the value."""
+
+        for action in self.actions:
+            if action:
+                return action(self, self.data)
         
     def validate(self):
         """Validates the request against the form fields. Returns
@@ -47,7 +79,7 @@ class Form(object):
             return False
 
         # execute custom form validators
-        for name, validator in type(self).__dict__.items():
+        for validator in type(self).__dict__.values():
             if getattr(validator, '__validator__', False):
                 for error in validator(self):
                     path = tuple(error.field.split('.'))
@@ -119,6 +151,24 @@ class Data(list):
             for name, value in self.pop(1).items():
                 self.head[name] = value
         self.append({})
+
+class Action(object):
+    """Callable form action."""
+    
+    def __init__(self, action, name, submitted):
+        self.name = name
+        self.submitted = submitted
+        self.__call__ = action
+
+    def __nonzero__(self):
+        return self.submitted
+
+    def __repr__(self):
+        return '<%s name="%s" submitted="%s">' % (
+            type(self).__name__, self.name or "", str(bool(self.submitted)))
+
+    def __call__(self, *args):
+        return self.__call__(*args)
         
 class Proxy(object):
     """Proxy object; reads and writes to attributes are forwarded to
@@ -191,9 +241,6 @@ class Proxy(object):
             serf = object.__getattribute__(self, '_serf')
             return prop.fget(serf)
         else:
-            if name == 'update':
-                import pdb; pdb.set_trace()
-                
             return getattr(
                 object.__getattribute__(self, '_context'), name)
         
@@ -225,7 +272,19 @@ def validator(*fields):
                     for msg in result:
                         yield ValidationError(field, msg)
         func.__validator__ = True
-        func.__name__ = validator.__name__
         return func
     return decorator
 
+def action(name):
+    if isinstance(name, types.FunctionType):
+        def func(self, data):
+            return name(self, data)
+        func.__action__ = None
+        return func
+    else:
+        def decorator(action):
+            def func(self, data):
+                return action(self, data)
+            func.__action__ = name
+            return func
+        return decorator

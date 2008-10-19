@@ -88,38 +88,6 @@ We need to invoke the ``save`` method to commit the changes.
   >>> data['title']
   u'Motorcity Detroit USA Live'
 
-Form submission
----------------
-
-By default, the form is assumed to be submitted; this means that the
-form data will reflect values present in the request.
-
-To change this behavior, instantiate the form with a ``prefix``
-identifying this particular form.
-
-The form is then submitted exactly when the values of the prefix code
-parameter matches this prefix; by default, this is "form_id".
-
-  >>> TapeForm.prefix_code
-  'form_id'
-
-  >>> request = Request(params=(
-  ...    ('form_id', 'tape_form'),
-  ...    ('title', u'Motorcity Detroit USA Live'),))
-
-  >>> form = TapeForm(request=request, prefix='tape_form')
-
-  >>> form.data['title']
-  u'Motorcity Detroit USA Live'  
-
-Note that the prefix must match the request prefix code value.
-
-  >>> form = TapeForm(request=request, prefix='other_form')
-  
-  >>> form.data['title'] is None
-  True
-
-  
 Validation
 ----------
 
@@ -148,6 +116,77 @@ The error message is available in the ``errors`` dictionary.
   >>> form.errors['year']
   u"Must be an 80's tape."
 
+Form submission
+---------------
+
+If a form prefix has not been set, the request is applied by
+default. However, most applications will want to set a form prefix and
+require explicit form submission.
+
+A form submits a "default action" if the prefix is submitted as a
+parameter.
+
+  >>> request = Request(params=(
+  ...    ('tape_form', ''),
+  ...    ('title', u'Motorcity Detroit USA Live'),))
+
+  >>> form = TapeForm(request=request, prefix='tape_form')
+
+  >>> form.data['title']
+  u'Motorcity Detroit USA Live'  
+
+As expected, if we submit a form with a different prefix, the request
+is not applied.
+
+  >>> form = TapeForm(request=request, prefix='other_form')
+  
+  >>> form.data['title'] is None
+  True
+
+We can also define form actions on the form class itself.
+
+  >>> class TapeAddForm(TapeForm):
+  ...     """An add-form for a casette tape."""
+  ...
+  ...     @formapi.action
+  ...     def handle_add(self, data):
+  ...         print "add"
+  ...
+  ...     @formapi.action("add_and_edit")
+  ...     def handle_add_and_edit(self, data):
+  ...         print "add_and_edit"
+
+The first action is a "default action"; if we submit the request we
+set up before, this action will be read to be submitted.
+  
+  >>> form = TapeAddForm(request=request, prefix='tape_form')
+  >>> form.actions
+  [<Action name="" submitted="True">,
+   <Action name="add_and_edit" submitted="False">]
+
+To call the form handler of the submitted action, we invoke the form's
+call method.
+
+  >>> form()
+  add
+
+To call the named form action, there must be a parameter in the
+request which is a concatenation of the prefix and the form action
+name. Accepted separation characters are '.' (dot), '_' (underscore)
+and '-' (dash).
+  
+  >>> request = Request(params=(
+  ...    ('tape_form-add_and_edit', ''),
+  ...    ('title', u'Motorcity Detroit USA Live'),))
+
+  >>> form = TapeAddForm(request=request, prefix='tape_form')
+  >>> form.actions
+  [<Action name="" submitted="False">,
+   <Action name="add_and_edit" submitted="True">]
+  
+  >>> form()
+  add_and_edit
+  
 Data proxies
 ------------
 
