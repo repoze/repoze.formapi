@@ -4,6 +4,9 @@ Changelog
 Head
 ~~~~
 
+0.2 (2008-10-19)
+~~~~~~~~~~~~~~~~
+
 - Added form action support. [malthe]
 
 - Reworked marshalling code to handle dynamic dictionary
@@ -33,7 +36,6 @@ Head
 
 - Fixed bug where the INewRequest event handler would call
   templates when checking for their existence [seletz]
-
 
 0.1 (2008-09-25)
 ~~~~~~~~~~~~~~~~
