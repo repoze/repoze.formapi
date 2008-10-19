@@ -4,6 +4,8 @@ Changelog
 Head
 ~~~~
 
+- Added form action support. [malthe]
+
 - Reworked marshalling code to handle dynamic dictionary
   keys. [malthe]
 
