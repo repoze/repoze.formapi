@@ -19,8 +19,8 @@ def read(*rnames):
     return open(os.path.join(os.path.dirname(__file__), *rnames)).read()
 
 setup(name='repoze.formapi',
-      version = '0.1',
-      description='Minimalistic form framework based on WebOb.',
+      version = '0.2',
+      description='Minimalistic form library.',
       long_description=read('README.txt') + read('src/repoze/formapi/README.txt'),
       keywords = "zope3 repoze",
       classifiers = [
@@ -39,8 +39,10 @@ setup(name='repoze.formapi',
       packages=find_packages('src'),
       package_dir = {'': 'src'},
       namespace_packages=['repoze', ],
-      install_requires=['setuptools',
-                        ],
+      install_requires=[
+          'setuptools',
+          'zope.interface',
+          ],
       include_package_data = True,
       zip_safe = False,
       test_suite="repoze.formapi.tests.test_suite",

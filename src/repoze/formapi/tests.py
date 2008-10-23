@@ -11,20 +11,41 @@ class Request:
             environ = {}
         self.environ = environ
         if params is None:
-            params = {}
+            params = ()
+        self.params = Params(params)
+
+class Params:
+    def __init__(self, params):
         self.params = params
 
+    def __iter__(self):
+        for key, value in self.params:
+            yield key
+
+    def get(self, key, default=None):
+        return dict(self.params).get(key, default)
+
+    def items(self):
+        return self.params
+        
 def test_suite():
-    doctests = 'README.txt',
-    
     globs = dict(Request=Request)
     
     return unittest.TestSuite([
         doctest.DocFileSuite(
-        filename,
-        optionflags=OPTIONFLAGS,
-        globs=globs,
-        package="repoze.formapi") for filename in doctests])
+            'README.txt',
+            optionflags=OPTIONFLAGS,
+            globs=globs,
+            package="repoze.formapi"),
+        doctest.DocTestSuite(
+            'repoze.formapi.form',
+            optionflags=OPTIONFLAGS,
+            globs=globs),
+        doctest.DocTestSuite(
+            'repoze.formapi.marshalling',
+            optionflags=OPTIONFLAGS,
+            globs=globs)
+        ])
 
 if __name__ == '__main__':
     unittest.main(defaultTest='test_suite')
