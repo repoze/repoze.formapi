@@ -6,37 +6,6 @@ from repoze.formapi.error import Errors
 import types
 import re
 
-class FieldValidator(object):
-    """Wrapper for validators.
-
-    This calls a validator object (usually a method) and collects all it's
-    errors. It also sets a flag that the form library can use to know that it
-    is a validator."""
-
-    is_validator = True
-
-    def __init__(self, func, *fields):
-        self.func = func
-        # Fields can be empty, in that case we want to have and empty path
-        if not fields:
-            self.fieldpaths = ((),)
-        else:
-            self.fieldpaths = [f.split('.') for f in fields]
-
-    def __call__(self, form):
-        for error in self.func(form):
-            for fieldpath in self.fieldpaths:
-                yield (fieldpath, error)
-
-def validator(*args):
-    # If the first (and only) argument is a callable process it
-    if len(args) == 1 and callable(args[0]):
-        return FieldValidator(args[0])
-    # Treat the args as field names and prepare a wrapper
-    else:
-        return lambda func: FieldValidator(func, *args)
-
-
 class Form(object):
     """Base form class. Optionally pass a dictionary as ``data`` and a
     WebOb-like request object as ``request``."""
@@ -287,7 +256,36 @@ class Proxy(object):
 
     __getitem__ = __getattribute__
     __setitem__ = __setattr__
+    
+class FieldValidator(object):
+    """Wrapper for validators.
 
+    This calls a validator object (usually a method) and collects all it's
+    errors. It also sets a flag that the form library can use to know that it
+    is a validator."""
+
+    is_validator = True
+
+    def __init__(self, func, *fields):
+        self.func = func
+        # Fields can be empty, in that case we want to have and empty path
+        if not fields:
+            self.fieldpaths = ((),)
+        else:
+            self.fieldpaths = [f.split('.') for f in fields]
+
+    def __call__(self, form):
+        for error in self.func(form):
+            for fieldpath in self.fieldpaths:
+                yield (fieldpath, error)
+
+def validator(*args):
+    # If the first (and only) argument is a callable process it
+    if len(args) == 1 and callable(args[0]):
+        return FieldValidator(args[0])
+    # Treat the args as field names and prepare a wrapper
+    else:
+        return lambda func: FieldValidator(func, *args)
 
 def action(name):
     if isinstance(name, types.FunctionType):
