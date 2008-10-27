@@ -1,6 +1,5 @@
 from zope import interface
 
-from repoze.formapi import interfaces
 from repoze.formapi import marshalling
 from repoze.formapi.error import Errors
 
@@ -41,8 +40,6 @@ def validator(*args):
 class Form(object):
     """Base form class. Optionally pass a dictionary as ``data`` and a
     WebOb-like request object as ``request``."""
-
-    interface.implements(interfaces.IForm)
 
     fields = {}
 
