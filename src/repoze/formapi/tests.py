@@ -42,6 +42,10 @@ def test_suite():
             optionflags=OPTIONFLAGS,
             globs=globs),
         doctest.DocTestSuite(
+            'repoze.formapi.error',
+            optionflags=OPTIONFLAGS,
+            globs=globs),
+        doctest.DocTestSuite(
             'repoze.formapi.marshalling',
             optionflags=OPTIONFLAGS,
             globs=globs)

@@ -40,8 +40,8 @@ def marshall(params, fields):
     Since all the tuples in ``params`` are valid, we expect no
     validation errors::
 
-        >>> errors
-        {}
+        >>> len(errors)
+        0
 
     To get to the marshalled field data, we use a similar approach.
 
