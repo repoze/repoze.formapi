@@ -13,6 +13,9 @@ class Form(object):
     fields = {}
 
     def __init__(self, data=None, context=None, request=None, prefix=None):
+        self.context = context
+        self.request = request
+
         if context is not None:
             if data is not None:
                 raise ValueError(
@@ -22,7 +25,7 @@ class Form(object):
             data = Proxy(context)
 
         self.data = Data(data)
-
+        
         # find action parameters
         if prefix is not None:
             re_prefix = re.compile(r'^%s[._-](?P<name>.*)' % prefix)
