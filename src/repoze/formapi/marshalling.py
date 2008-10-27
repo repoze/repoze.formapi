@@ -60,7 +60,7 @@ def marshall(params, fields):
         >>> data['user']['age'] is None
         True
         
-        >>> errors['user']['age'].messages[0]
+        >>> errors['user']['age'][0]
         "invalid literal for int() with base 10: 'ten'"
 
     Note that the ``data`` and ``errors`` dictionaries provide a
@@ -162,7 +162,7 @@ def marshall(params, fields):
             e = errors
             for p in path:
                 e = e[p]
-            e.messages.append(error.message)
+            e += error.message
         except KeyError:
             # parameter does not match this form field definition; we
             # can safely disregard it.
@@ -172,7 +172,7 @@ def marshall(params, fields):
         e = errors
         for p in path:
             e = e[path]
-        e.messages.append(message)
+        e += message
 
     return data, errors
 
@@ -378,12 +378,12 @@ class Marshaller(object):
                 continue
 
             data = _data
-            for key in path[:1]:
+            for key in path[:-1]:
                 if key in data:
                     data = data[key]
                 else:
                     data = data[key] = defaultdict(lambda: None)
-            data[key] = value
+            data[path[-1]] = value
         return _data
 
     def traverse(self, path):

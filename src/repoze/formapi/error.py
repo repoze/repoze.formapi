@@ -24,13 +24,13 @@ class Errors(unicode):
       >>> isinstance(errors[None], Errors)
       True
 
-    Errors may be appended to the object using the ``append`` method.
+    Errors may be appended to the object using the add operator.
     
-      >>> errors.append("Abc.")
-      >>> errors.append("Def.")
+      >>> errors += "Abc."
+      >>> errors += "Def."
 
-      >>> errors.messages
-      ['Abc.', 'Def.']
+      >>> errors[0]
+      'Abc.'
 
     We can iterate through the errors object.
 
@@ -48,30 +48,41 @@ class Errors(unicode):
       
     """
 
+    _messages = _dict = None
+
     def __init__(self, *args, **kwargs):
-        self.dict = defaultdict(Errors, *args, **kwargs)
-        self.messages = []
+        self._dict = defaultdict(Errors, *args, **kwargs)
+        self._messages = []
 
     def __nonzero__(self):
-        return len(self.dict) or len(self.messages)
+        return len(self._dict) or len(self._messages)
 
     def __repr__(self):
         return repr(unicode(self))
 
-    def __getitem__(self, name):
-        return self.dict[name]
+    def __getitem__(self, key):
+        if isinstance(key, int):
+            return self._messages[key]
+        return self._dict[key]
 
     def __unicode__(self):
-        return u" ".join(self.messages)
+        return u" ".join(self._messages)
 
     def __str__(self):
         return str(unicode(self))
 
     def __iter__(self):
-        return iter(self.messages)
+        return iter(self._messages)
 
     def __len__(self):
         return len(unicode(self))
+
+    def __add__(self, error):
+        self._messages.append(error)
+        return self
     
-    def append(self, error):
-        self.messages.append(error)
+    def __getattribute__(self, name):
+        if name in type(self).__dict__:
+            return object.__getattribute__(self, name)
+        raise AttributeError(name)
+

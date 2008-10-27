@@ -97,7 +97,6 @@ needs. These extra validators can be hooked up using the `validator`
 decorator.
 
   >>> class CDForm(formapi.Form):
-  ...     
   ...     fields = {
   ...         'artist': unicode,
   ...         'title': unicode,
@@ -120,7 +119,7 @@ easy to create validators that need to check multiple fields.
 
 The errors attribute contains our error message.
 
-  >>> form.errors.messages[0]
+  >>> form.errors[0]
   'Genre is invalid'
 
 Errors can also be assigned to a specific field. To do this a
@@ -148,7 +147,7 @@ specific field.
   >>> form.validate()
   False
 
-  >>> form.errors['genre'].messages[0]
+  >>> form.errors['genre'][0]
   'Genre is invalid'
 
 
