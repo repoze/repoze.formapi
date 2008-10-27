@@ -37,14 +37,14 @@ class Errors(unicode):
       >>> tuple(errors)
       ('Abc.', 'Def.')
 
-      >>> len(errors)
-      2
-      
     The string representation of the object is a concatenation of the
     individual error messages.
     
       >>> unicode(errors)
       u'Abc. Def.'
+
+      >>> len(errors)
+      9
       
     """
 
@@ -71,7 +71,7 @@ class Errors(unicode):
         return iter(self.messages)
 
     def __len__(self):
-        return len(self.messages)
+        return len(unicode(self))
     
     def append(self, error):
         self.messages.append(error)
