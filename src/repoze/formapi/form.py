@@ -6,12 +6,65 @@ from repoze.formapi.error import Errors
 import types
 import re
 
+def get_instances_of(type, *bases):
+    for base in bases:
+        for value in base.__dict__.values():
+            if isinstance(value, type):
+                yield value
+        for value in get_instances_of(type, *base.__bases__):
+            yield value            
+
+class Validator(object):
+    """Wrapper for validators.
+
+    This calls a validator object (usually a method) and collects all it's
+    errors. It also sets a flag that the form library can use to know that it
+    is a validator."""
+
+    def __init__(self, func, *fields):
+        self.func = func
+        # Fields can be empty, in that case we want to have and empty path
+        if not fields:
+            self.fieldpaths = ((),)
+        else:
+            self.fieldpaths = [f.split('.') for f in fields]
+
+    def __call__(self, form):
+        for error in self.func(form):
+            for fieldpath in self.fieldpaths:
+                yield (fieldpath, error)
+
+class Action(object):
+    def __init__(self, action, name=None, submitted=False):
+        self.action = action
+        self.name = name
+        self.submitted = submitted
+
+    @property
+    def __call__(self):
+        return self.action
+
+    def __nonzero__(self):
+        return self.submitted
+
+    def __repr__(self):
+        return '<%s name="%s" submitted="%s">' % (
+            type(self).__name__, self.name or "", str(bool(self.submitted)))
+    
+class metaclass(type):
+    def __init__(kls, name, bases, dict):
+        kls.validators = tuple(get_instances_of(Validator, kls))
+        kls.actions = tuple(get_instances_of(Action, kls))
+
 class Form(object):
     """Base form class. Optionally pass a dictionary as ``data`` and a
     WebOb-like request object as ``request``."""
 
+    __metaclass__ = metaclass
+    
     fields = {}
-
+    status = None
+    
     def __init__(self, data=None, context=None, request=None, prefix=None):
         self.context = context
         self.request = request
@@ -40,12 +93,11 @@ class Form(object):
 
         # initialize form actions
         actions = self.actions = []
-        for action in type(self).__dict__.values():
-            marker = object()
-            name = getattr(action, '__action__', marker)
-            if name is not marker:
-                actions.append(Action(action, name, name in action_params))
-
+        for action in type(self).actions:
+            name = action.name
+            actions.append(
+                Action(action.__call__, name, name in action_params))
+                
         # conditionally apply request parameters if:
         # 1. no prefix has been set
         # 2. there is a submitted action
@@ -57,6 +109,7 @@ class Form(object):
             params = request.params.items()
         else:
             params = ()
+            
         # marshall request parameters
         data, errors = marshalling.marshall(params, self.fields)
         self.data.update(data)
@@ -69,20 +122,18 @@ class Form(object):
 
         for action in self.actions:
             if action:
-                return action(self, self.data)
-
+                status = self.status = action(self, self.data)
+                return status
+            
     def validate(self):
         """Validates the request against the form fields. Returns
         ``True`` if all fields validate, else ``False``."""
-        for validator in type(self).__dict__.itervalues():
-            if not getattr(validator, 'is_validator', False):
-                continue
-
+        for validator in self.validators:
             for field_path, validation_error in validator(self):
                 errors = self.errors
                 for field in field_path:
                     errors = errors[field]
-                errors.messages.append(validation_error)
+                errors += validation_error
 
         return not bool(self.errors)
 
@@ -150,25 +201,6 @@ class Data(list):
             for name, value in self.pop(1).items():
                 self.head[name] = value
         self.append({})
-
-
-class Action(object):
-    """Callable form action."""
-
-    def __init__(self, action, name, submitted):
-        self.name = name
-        self.submitted = submitted
-        self.__call__ = action
-
-    def __nonzero__(self):
-        return self.submitted
-
-    def __repr__(self):
-        return '<%s name="%s" submitted="%s">' % (
-            type(self).__name__, self.name or "", str(bool(self.submitted)))
-
-    def __call__(self, *args):
-        return self.__call__(*args)
 
 class Proxy(object):
     """Proxy object; reads and writes to attributes are forwarded to
@@ -260,46 +292,18 @@ class Proxy(object):
     __getitem__ = __getattribute__
     __setitem__ = __setattr__
     
-class FieldValidator(object):
-    """Wrapper for validators.
-
-    This calls a validator object (usually a method) and collects all it's
-    errors. It also sets a flag that the form library can use to know that it
-    is a validator."""
-
-    is_validator = True
-
-    def __init__(self, func, *fields):
-        self.func = func
-        # Fields can be empty, in that case we want to have and empty path
-        if not fields:
-            self.fieldpaths = ((),)
-        else:
-            self.fieldpaths = [f.split('.') for f in fields]
-
-    def __call__(self, form):
-        for error in self.func(form):
-            for fieldpath in self.fieldpaths:
-                yield (fieldpath, error)
+def action(name):
+    if isinstance(name, types.FunctionType):
+        return Action(name)
+    else:
+        def decorator(action):
+            return Action(action, name)
+        return decorator
 
 def validator(*args):
     # If the first (and only) argument is a callable process it
     if len(args) == 1 and callable(args[0]):
-        return FieldValidator(args[0])
+        return Validator(args[0])
     # Treat the args as field names and prepare a wrapper
     else:
-        return lambda func: FieldValidator(func, *args)
-
-def action(name):
-    if isinstance(name, types.FunctionType):
-        def func(self, data):
-            return name(self, data)
-        func.__action__ = None
-        return func
-    else:
-        def decorator(action):
-            def func(self, data):
-                return action(self, data)
-            func.__action__ = name
-            return func
-        return decorator
+        return lambda func: Validator(func, *args)
