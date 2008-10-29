@@ -4,6 +4,9 @@ Changelog
 Head
 ~~~~
 
+- Marshalled data is no longer applied when no parameters are
+  available from the request. [malthe]
+
 - Made the `errors`-object subclass unicode instead of defaultdict and
   implemented custom string representation function which concatenates
   error messages. [malthe]
