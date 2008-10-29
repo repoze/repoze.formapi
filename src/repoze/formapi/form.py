@@ -109,10 +109,12 @@ class Form(object):
             params = request.params.items()
         else:
             params = ()
-            
+
         # marshall request parameters
         data, errors = marshalling.marshall(params, self.fields)
-        self.data.update(data)
+
+        if len(params):
+            self.data.update(data)
 
         self.errors = errors
         self.prefix = prefix
@@ -176,7 +178,7 @@ class Data(list):
 
             if value is not None:
                 return value
-
+    
     def __setitem__(self, name, value):
         self.tail[name] = value
 
