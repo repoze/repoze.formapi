@@ -277,11 +277,20 @@ class Marshaller(object):
         >>> bool(marshaller)
         True
 
+
     If the path is not exhausted, a new marshaller instance is
     returned, which curries the path onto new requests.
 
         >>> marshaller['users']['foo']['username']
         'foo'
+
+    Each segment is iterable.
+
+        >>> tuple(marshaller['users'])
+        ('foo',)
+
+        >>> tuple(sorted(marshaller['users']['foo']))
+        ('groups', 'id', 'username')
         
     """
 
@@ -360,10 +369,12 @@ class Marshaller(object):
         return repr(data)
 
     def __iter__(self):
+        items = set()
         for path in self.data:
             if path is not None and tuple(
                 path[:len(self.path)]) == self.path:
-                yield path[len(self.path)]
+                items.add(path[len(self.path)])
+        return iter(items)
 
     def items(self):
         items = []
@@ -382,7 +393,8 @@ class Marshaller(object):
                 if key in data:
                     data = data[key]
                 else:
-                    data = data[key] = defaultdict(lambda: None)
+                    data[key] = defaultdict(lambda: None)
+                    data = data[key]
             data[path[-1]] = value
         return _data
 
