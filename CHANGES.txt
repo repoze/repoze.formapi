@@ -4,6 +4,9 @@ Changelog
 Head
 ~~~~
 
+0.3 (2008-10-27)
+~~~~~~~~~~~~~~~~
+
 - Marshalled data is no longer applied when no parameters are
   available from the request. [malthe]
 
