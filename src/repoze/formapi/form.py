@@ -64,6 +64,7 @@ class Form(object):
     
     fields = {}
     status = None
+    prefix = None
     
     def __init__(self, data=None, context=None, request=None, prefix=None):
         self.context = context
@@ -79,6 +80,9 @@ class Form(object):
 
         self.data = Data(data)
 
+        if prefix is None:
+            prefix = self.prefix
+            
         # find action parameters
         action_params = {}
         if prefix is not None:
