@@ -4,6 +4,8 @@ Changelog
 Head
 ~~~~
 
+- Fixed issue where action parameters would not get set. [malthe]
+
 0.3 (2008-10-27)
 ~~~~~~~~~~~~~~~~
 

@@ -78,11 +78,11 @@ class Form(object):
             data = Proxy(context)
 
         self.data = Data(data)
-        
+
         # find action parameters
+        action_params = {}
         if prefix is not None:
             re_prefix = re.compile(r'^%s[._-](?P<name>.*)' % prefix)
-            action_params = {}
             for key, value in request.params.items():
                 if key == prefix:
                     action_params[None] = value
