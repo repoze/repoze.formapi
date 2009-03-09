@@ -41,7 +41,6 @@ setup(name='repoze.formapi',
       namespace_packages=['repoze', ],
       install_requires=[
           'setuptools',
-          'zope.interface',
           ],
       include_package_data = True,
       zip_safe = False,

@@ -1,7 +1,4 @@
-from zope import interface
-
 from repoze.formapi import marshalling
-from repoze.formapi.error import Errors
 
 import types
 import re
