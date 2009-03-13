@@ -4,6 +4,11 @@ Changelog
 Unreleased
 ~~~~~~~~~~
 
+- Made the truth test for the errors object check just for messages in
+  itself or it's sub errors. This avoids having the errors object
+  saying it is true after accessing a key for which no error exists
+  (thus creating a new errors object). [jvloothuis]
+
 - Changed the base class of errors from unicode to object. This makes
   it behave like one would expect when printing etc. [jvloothuis]
 

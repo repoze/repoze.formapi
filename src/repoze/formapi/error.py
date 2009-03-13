@@ -46,6 +46,20 @@ class Errors(object):
       >>> len(errors)
       9
       
+    The truth value of the errors object is based on the error messages it or
+    it's sub errors contain.
+
+      >>> bool(errors)
+      True
+
+    If there are no error messages the truth value will be false regardless
+    even when there are error keys.
+
+      >>> errors = Errors()
+      >>> name_error = errors['name']
+      >>> bool(errors)
+      False
+
     """
 
     _messages = _dict = None
@@ -55,7 +69,7 @@ class Errors(object):
         self._messages = []
 
     def __nonzero__(self):
-        return len(self._dict) or len(self._messages)
+        return bool(self._messages) or any(self._dict.itervalues())
 
     def __repr__(self):
         return repr(unicode(self))
