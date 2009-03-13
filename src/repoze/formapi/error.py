@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-class Errors(unicode):
+class Errors(object):
     """Container for errors.
 
     Each error will be present in it's `messages` list. Dictionary lookup can
@@ -13,11 +13,11 @@ class Errors(unicode):
       >>> from repoze.formapi.error import Errors
       >>> errors = Errors()
 
-    The `errors` object is a unicode string that inhibits a dict-like
-    behavior, too.
+    The `errors` object is an object which can easily be converted to unicode
+    and that inhibits a dict-like behavior, too.
     
-      >>> isinstance(errors, unicode)
-      True
+      >>> unicode(errors)
+      u''
 
     Any dict-entry returns a new `errors`-object.
     
@@ -80,7 +80,7 @@ class Errors(unicode):
     def __add__(self, error):
         self._messages.append(error)
         return self
-    
+
     def __getattribute__(self, name):
         if name in type(self).__dict__:
             return object.__getattribute__(self, name)

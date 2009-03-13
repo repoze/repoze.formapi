@@ -1,6 +1,12 @@
 Changelog
 =========
 
+Unreleased
+~~~~~~~~~~
+
+- Changed the base class of errors from unicode to object. This makes
+  it behave like one would expect when printing etc. [jvloothuis]
+
 0.3.2 (2009-03-09)
 ~~~~~~~~~~~~~~~~~~
 
