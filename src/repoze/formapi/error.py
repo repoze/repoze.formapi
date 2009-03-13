@@ -60,6 +60,22 @@ class Errors(object):
       >>> bool(errors)
       False
 
+    Two errors instances are considered equal when they have the same keys with
+    the same messages.
+
+      >>> a = Errors()
+      >>> a['foo'].append('Error')
+      >>> b = Errors()
+      >>> b['foo'].append('Error')
+      >>> a  == b
+      True
+
+    Adding an error to one makes them unequal.
+
+      >>> a['bar'].append('Error')
+      >>> a == b
+      False
+ 
     """
 
     _messages = _dict = None
@@ -92,11 +108,16 @@ class Errors(object):
         return len(unicode(self))
 
     def __add__(self, error):
-        self._messages.append(error)
+        self.append(error)
         return self
+
+    def append(self, error):
+        self._messages.append(error)
 
     def __getattribute__(self, name):
         if name in type(self).__dict__:
             return object.__getattribute__(self, name)
         raise AttributeError(name)
 
+    def __eq__(self, other):
+        return self._messages == other._messages and self._dict == other._dict
