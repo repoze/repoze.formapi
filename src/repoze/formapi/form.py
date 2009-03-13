@@ -9,7 +9,7 @@ def get_instances_of(type, *bases):
             if isinstance(value, type):
                 yield value
         for value in get_instances_of(type, *base.__bases__):
-            yield value            
+            yield value
 
 class Validator(object):
     """Wrapper for validators.
@@ -47,7 +47,7 @@ class Action(object):
     def __repr__(self):
         return '<%s name="%s" submitted="%s">' % (
             type(self).__name__, self.name or "", str(bool(self.submitted)))
-    
+
 class metaclass(type):
     def __init__(kls, name, bases, dict):
         kls.validators = tuple(get_instances_of(Validator, kls))
@@ -58,11 +58,11 @@ class Form(object):
     WebOb-like request object as ``request``."""
 
     __metaclass__ = metaclass
-    
+
     fields = {}
     status = None
     prefix = None
-    
+
     def __init__(self, data=None, context=None, request=None, prefix=None):
         self.context = context
         self.request = request
@@ -79,7 +79,7 @@ class Form(object):
 
         if prefix is None:
             prefix = self.prefix
-            
+
         # find action parameters
         action_params = {}
         if prefix is not None:
@@ -98,7 +98,7 @@ class Form(object):
             name = action.name
             actions.append(
                 Action(action.__call__, name, name in action_params))
-                
+
         # conditionally apply request parameters if:
         # 1. no prefix has been set
         # 2. there is a submitted action
@@ -127,7 +127,7 @@ class Form(object):
             if action:
                 status = self.status = action(self, self.data)
                 return status
-            
+
     def validate(self):
         """Validates the request against the form fields. Returns
         ``True`` if all fields validate, else ``False``."""
