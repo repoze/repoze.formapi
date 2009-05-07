@@ -29,8 +29,13 @@ class Params:
         return self.params
         
 def test_suite():
-    globs = dict(Request=Request)
-    
+    from repoze import formapi
+
+    globs = dict(
+        Request=Request,
+        formapi=formapi
+        )
+
     return unittest.TestSuite([
         doctest.DocFileSuite(
             'README.txt',

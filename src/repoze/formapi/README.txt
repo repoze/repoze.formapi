@@ -1,11 +1,9 @@
-Documentation
-=============
+Using :mod:`repoze.formapi`
+===========================
 
-To set up form fields, simply subclass and set the ``fields``
-attribute.
+To create a form you subclass the ``repoze.formapi.Form`` class and
+define the form field definitions in the ``fields`` attribute.
 
-  >>> from repoze import formapi
-  
   >>> class TapeForm(formapi.Form):
   ...     """A form to edit a casette tape object."""
   ...
@@ -16,8 +14,9 @@ attribute.
   ...         'year': int,
   ...         'playtime': float}
 
-Forms often do not have default values, for instance search forms or
-add forms.
+There are many forms for which default values don't apply (e.g. search
+forms or :term:`add forms`); such forms can be instantiated with no
+arguments:
 
   >>> form = TapeForm()
 
@@ -27,26 +26,23 @@ didn't pass in a request, there's no data available.
   >>> form.data['artist'] is None
   True
 
-If a request comes in, the values are reflected in the form data. We
-can also validate the request against the form fields.
+In a web application, usually we'll anticipate data coming in through
+the request object. Values are then reflected in the form data. We can
+also validate the request against the form fields.
 
-There's no inherent concept of required fields, hence requests may
-provide zero or more field values.
+.. note:: There's no inherent concept of required fields.
   
 We pass the request to the form as keyword argument.
 
   >>> request = Request(
   ...    params=(('title', u'Motorcity Detroit USA Live'),))
-
   >>> form = TapeForm(request=request)
 
-This request would set the title of the record on the form data
-object; since it's a valid unicode string, we expect no validation
-errors.
+This will set the title of the record on the form data object. Since
+it's a valid unicode string, we expect no validation errors.
 
   >>> form.validate()
   True
-
   >>> form.data['title']
   u'Motorcity Detroit USA Live'
 
@@ -59,10 +55,9 @@ effect we pass in a dictionary object.
   ...    'asin': 'B000001FL8',
   ...    'year': 1975,
   ...    'playtime': 33.53}
-
   >>> form = TapeForm(data)
 
-The values are available in the ``data`` object.
+The values are available in the form data object.
 
   >>> form.data['title']
   u'Four Wheel Drive'
@@ -72,25 +67,24 @@ that values from the request are used before the passed dictionary
 object is queried.
 
   >>> form = TapeForm(data, request=request)
-
   >>> form.data['title']
   u'Motorcity Detroit USA Live'
 
-All updates to the data object are transient.
-
+The provided ``data`` dictionary is unchanged at this point:
+  
   >>> data['title']
   u'Four Wheel Drive'
 
-We need to invoke the ``save`` method to commit the changes.
+We need to invoke the ``save`` method to commit the changes to the
+provided dictionary.
 
   >>> form.data.save()
-  
   >>> data['title']
   u'Motorcity Detroit USA Live'
 
 
-Extra validation
-----------------
+Additional validation
+---------------------
 
 It is possible to create validation methods for more complex
 needs. These extra validators can be hooked up using the `validator`
@@ -146,7 +140,6 @@ specific field.
   >>> form = CDForm()
   >>> form.validate()
   False
-
   >>> form.errors['genre'][0]
   'Genre is invalid'
 
@@ -164,9 +157,7 @@ parameter.
   >>> request = Request(params=(
   ...    ('tape_form', ''),
   ...    ('title', u'Motorcity Detroit USA Live'),))
-
   >>> form = TapeForm(request=request, prefix='tape_form')
-
   >>> form.data['title']
   u'Motorcity Detroit USA Live'  
 
@@ -174,7 +165,6 @@ As expected, if we submit a form with a different prefix, the request
 is not applied.
 
   >>> form = TapeForm(request=request, prefix='other_form')
-  
   >>> form.data['title'] is None
   True
 
@@ -213,12 +203,10 @@ and '-' (dash).
   >>> request = Request(params=(
   ...    ('tape_form-add_and_edit', ''),
   ...    ('title', u'Motorcity Detroit USA Live'),))
-
   >>> form = TapeAddForm(request=request, prefix='tape_form')
   >>> form.actions
   [<Action name="" submitted="False">,
    <Action name="add_and_edit" submitted="True">]
-  
   >>> form()
   add_and_edit
   
@@ -248,9 +236,7 @@ and write attributes on the content object.
 
   >>> proxy.title
   u'Four Wheel Drive'
-  
   >>> proxy.title = u'Motorcity Detroit USA Live'
-  
   >>> tape.title
   u'Motorcity Detroit USA Live'
 
@@ -268,7 +254,6 @@ attribute; the value is uppercased.
   ...         self.title = value.upper()
   ...
   ...     title = property(get_title, set_title)
-
   >>> proxy = TapeProxy(tape)
 
 If we read and write to the ``title`` attribute of this proxy object,
@@ -290,7 +275,6 @@ When instantiating a form, you can pass in a proxy object instead of
 us to save the form data on the proxied object.
   
   >>> form = TapeForm(proxy, request=request)
-
   >>> form.data['title'] = u'Four Wheel Drive'
 
 Assignment behaves logically.
@@ -302,6 +286,5 @@ However, if we invoke the ``save`` action, changes take effect on the
 proxied object.
   
   >>> form.data.save()
-  
   >>> tape.title
   u'FOUR WHEEL DRIVE'
