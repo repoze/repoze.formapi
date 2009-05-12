@@ -88,7 +88,7 @@ class Errors(object):
         return bool(self._messages) or any(self._dict.itervalues())
 
     def __repr__(self):
-        return repr(unicode(self))
+         return '<Errors: %r, %r>' % (self._messages, self._dict)
 
     def __getitem__(self, key):
         if isinstance(key, int):
@@ -120,4 +120,6 @@ class Errors(object):
         raise AttributeError(name)
 
     def __eq__(self, other):
+        if type(other) != type(self):
+            return False
         return self._messages == other._messages and self._dict == other._dict
