@@ -75,7 +75,14 @@ class Errors(object):
       >>> a['bar'].append('Error')
       >>> a == b
       False
- 
+
+    We can use the standard dictionary ``get`` method.
+
+      >>> a.get('foo')
+      <Errors: ['Error'], defaultdict(<class 'repoze.formapi.error.Errors'>, {})>
+      >>> a.get('boo', False)
+      False
+
     """
 
     _messages = _dict = None
@@ -111,9 +118,6 @@ class Errors(object):
         self.append(error)
         return self
 
-    def append(self, error):
-        self._messages.append(error)
-
     def __getattribute__(self, name):
         if name in type(self).__dict__:
             return object.__getattribute__(self, name)
@@ -123,3 +127,10 @@ class Errors(object):
         if type(other) != type(self):
             return False
         return self._messages == other._messages and self._dict == other._dict
+
+    def append(self, error):
+        self._messages.append(error)
+
+    def get(self, key, default=None):
+        assert isinstance(key, basestring), "Key must be a string."
+        return self._dict.get(key, default)

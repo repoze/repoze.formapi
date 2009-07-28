@@ -1,8 +1,9 @@
 Changelog
 =========
 
-Unreleased
-~~~~~~~~~~
+In next release...
+
+- Added ``get`` method to errors dictionary. [malthe]
 
 - Errors can now be compared with each other to see if they are the
   same. This makes it easier to test without doctest.
