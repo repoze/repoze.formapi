@@ -167,21 +167,26 @@ The form data will draw defaults from the context.
   >>> form.data['title']
   u'Motorcity Detroit USA Live'
 
-This is true also if trivial parameters are provided.
+Parameters have priority.
 
   >>> request = Request(params=(('asin', u''), ('year', u'')))
   >>> form = TapeForm(context=tape, request=request)
 
-The ``asin`` field is a string and is accepted as non-trivial input.
+This input does not validate.
+  
+  >> form.validate()
+  False
+
+The ``asin`` input validates and is coerced to a string (from
+unicode).
 
   >>> form.data['asin']
   ''
 
-On the other hand, ``year`` is a number and the empty string is a
-trivial input.
-  
+The ``year`` input does not validate and is left as-is.
+
   >>> form.data['year']
-  1975
+  u''
 
 Form submission
 ---------------

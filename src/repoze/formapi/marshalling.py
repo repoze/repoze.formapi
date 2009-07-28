@@ -61,9 +61,9 @@ def marshall(params, fields):
 
         >>> data, errors = marshall((("user.age", "ten"),), fields)
         
-        >>> data['user']['age'] is None
-        True
-        
+        >>> data['user']['age']
+        'ten'
+
         >>> errors['user']['age'][0]
         "invalid literal for int() with base 10: 'ten'"
 
@@ -162,7 +162,6 @@ def marshall(params, fields):
         try:
             data[path] = value
         except ValueError, error:
-            data[path] = None
             e = errors
             for p in path:
                 e = e[p]
@@ -338,6 +337,7 @@ class Marshaller(object):
         # not comply with the field definition
         data_type = self.traverse(path)
 
+        error = False
         if isinstance(data_type, (tuple, list)):
             if isinstance(value, (tuple, list)):
                 if key in self.data:
@@ -347,7 +347,10 @@ class Marshaller(object):
 
             for v in value:
                 if v is not None and self.coerce and not isinstance(v, data_type[0]):
-                    v = data_type[0](v)
+                    try:
+                        v = data_type[0](v)
+                    except:
+                        error = True
 
                 if isinstance(data_type, list):
                     self.data.setdefault(
@@ -359,11 +362,17 @@ class Marshaller(object):
                         self.data[key] = (v,)
         else:
             if value is not None and self.coerce and not isinstance(value, data_type):
-                value = data_type(value)
+                try:
+                    value = data_type(value)
+                except:
+                    error = True
             self.data[key] = value
 
         if value is not None:
             self.data[None] = True
+
+        if error is True:
+            raise
 
     def __nonzero__(self):
         return self.data.get(None, False)

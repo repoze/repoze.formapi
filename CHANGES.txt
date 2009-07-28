@@ -3,6 +3,9 @@ Changelog
 
 In next release...
 
+- Even if form input does not validate, the input is available as-is
+  in the ``data`` dictionary. [malthe, rnix]
+
 - Request parameters can now be provided directly as the ``params``
   keyword argument. [malthe]
 
