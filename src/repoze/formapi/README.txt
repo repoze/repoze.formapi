@@ -149,6 +149,39 @@ specific field.
   >>> form.errors['genre'][0]
   'Genre is invalid'
 
+Form context
+------------
+
+We can set the context of a form to some object.
+
+  >>> class Tape:
+  ...    title = u'Motorcity Detroit USA Live'
+  ...    asin = 'B000001FL8'
+  ...    year = 1975
+
+  >>> tape = Tape()
+
+The form data will draw defaults from the context.
+  
+  >>> form = TapeForm(context=tape)
+  >>> form.data['title']
+  u'Motorcity Detroit USA Live'
+
+This is true also if trivial parameters are provided.
+
+  >>> request = Request(params=(('asin', u''), ('year', u'')))
+  >>> form = TapeForm(context=tape, request=request)
+
+The ``asin`` field is a string and is accepted as non-trivial input.
+
+  >>> form.data['asin']
+  ''
+
+On the other hand, ``year`` is a number and the empty string is a
+trivial input.
+  
+  >>> form.data['year']
+  1975
 
 Form submission
 ---------------
@@ -162,10 +195,10 @@ parameter.
 
   >>> request = Request(params=(
   ...    ('tape_form', ''),
-  ...    ('title', u'Motorcity Detroit USA Live'),))
+  ...    ('title', u'Motorcity Detroit USA Live')))
   >>> form = TapeForm(request=request, prefix='tape_form')
   >>> form.data['title']
-  u'Motorcity Detroit USA Live'  
+  u'Motorcity Detroit USA Live'
 
 As expected, if we submit a form with a different prefix, the request
 is not applied.
@@ -294,3 +327,4 @@ proxied object.
   >>> form.data.save()
   >>> tape.title
   u'FOUR WHEEL DRIVE'
+

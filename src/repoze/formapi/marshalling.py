@@ -21,6 +21,7 @@ def marshall(params, fields):
         ...         "name": str,
         ...         "nick": str,
         ...         "age": int,
+        ...         "extra": str,
         ...     }
         ... }
 
@@ -30,7 +31,8 @@ def marshall(params, fields):
         >>> params = (
         ...     ("user.name", "Fred Kaputnik"),
         ...     ("user.nick", "fred"),
-        ...     ("user.age", 42))
+        ...     ("user.age", 42),
+        ...     ("user.extra", ""))
 
     Note that the keys of the parameter tuples are dotted paths.
 
@@ -51,6 +53,8 @@ def marshall(params, fields):
         'fred'
         >>> data['user']['age']
         42
+        >>> data['user']['extra']
+        ''
 
     To illustrate error handling, we can violate the validation
     constraint of the ``age`` field.
