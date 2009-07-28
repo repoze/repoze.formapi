@@ -3,6 +3,9 @@ Changelog
 
 In next release...
 
+- Request parameters can now be provided directly as the ``params``
+  keyword argument. [malthe]
+
 - Added ``get`` method to errors dictionary. [malthe]
 
 - Errors can now be compared with each other to see if they are the

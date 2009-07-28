@@ -63,7 +63,7 @@ class Form(object):
     status = None
     prefix = None
 
-    def __init__(self, data=None, context=None, request=None, prefix=None):
+    def __init__(self, data=None, context=None, request=None, params=None, prefix=None):
         self.context = context
         self.request = request
 
@@ -80,11 +80,17 @@ class Form(object):
         if prefix is None:
             prefix = self.prefix
 
+        if request is not None:
+            if params is not None:
+                raise ValueError(
+                    "Can't provide both ``params`` and ``request``.")
+            params = request.params
+
         # find action parameters
         action_params = {}
-        if prefix is not None:
+        if prefix is not None and params is not None:
             re_prefix = re.compile(r'^%s[._-](?P<name>.*)' % prefix)
-            for key, value in request.params.items():
+            for key, value in params.items():
                 if key == prefix:
                     action_params[None] = value
                 else:
@@ -103,11 +109,11 @@ class Form(object):
         # 1. no prefix has been set
         # 2. there is a submitted action
         # 3. there are no defined actions, but a default action was submitted
-        if request is not None and (
+        if params is not None and (
             prefix is None or \
             filter(None, actions) or \
             len(actions) == 0 and action_params.get(None) is not None):
-            params = request.params.items()
+            params = params.items()
         else:
             params = ()
 

@@ -46,6 +46,12 @@ it's a valid unicode string, we expect no validation errors.
   >>> form.data['title']
   u'Motorcity Detroit USA Live'
 
+Alternatively we can pass in the ``params`` attribute directly.
+
+  >>> form = TapeForm(params=request.params)
+  >>> form.data['title']
+  u'Motorcity Detroit USA Live'
+
 We'll often want to initialize the form with default values. To this
 effect we pass in a dictionary object.
 
