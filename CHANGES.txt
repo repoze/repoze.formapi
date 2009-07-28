@@ -3,6 +3,9 @@ Changelog
 
 In next release...
 
+- The selected action, if any, is available in the ``action``
+  attribute of a form instance. [malthe]
+
 - Even if form input does not validate, the input is available as-is
   in the ``data`` dictionary. [malthe, rnix]
 

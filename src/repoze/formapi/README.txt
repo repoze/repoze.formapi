@@ -233,6 +233,11 @@ set up before, this action will be read to be submitted.
   [<Action name="" submitted="True">,
    <Action name="add_and_edit" submitted="False">]
 
+The submitted action is available in the ``action`` parameter.
+   
+  >>> form.action
+  <Action name="" submitted="True">
+
 To call the form handler of the submitted action, we invoke the form's
 call method.
 

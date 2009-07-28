@@ -62,6 +62,7 @@ class Form(object):
     fields = {}
     status = None
     prefix = None
+    action = None
 
     def __init__(self, data=None, context=None, request=None, params=None, prefix=None):
         self.context = context
@@ -102,8 +103,10 @@ class Form(object):
         actions = self.actions = []
         for action in type(self).actions:
             name = action.name
-            actions.append(
-                Action(action.__call__, name, name in action_params))
+            action = Action(action.__call__, name, name in action_params)
+            actions.append(action)
+            if action:
+                self.action = action
 
         # conditionally apply request parameters if:
         # 1. no prefix has been set
@@ -129,10 +132,9 @@ class Form(object):
     def __call__(self):
         """Calls the first submitted action and returns the value."""
 
-        for action in self.actions:
-            if action:
-                status = self.status = action(self, self.data)
-                return status
+        if self.action is not None:
+            self.status = self.action(self, self.data)
+        return self.status
 
     def validate(self):
         """Validates the request against the form fields. Returns
