@@ -164,7 +164,7 @@ def marshall(params, fields):
             e = errors
             for p in path:
                 e = e[p]
-            e += error.message
+            e += str(error)
         except KeyError:
             # parameter does not match this form field definition; we
             # can safely disregard it.
