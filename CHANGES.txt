@@ -1,7 +1,8 @@
 Changelog
 =========
 
-In next release...
+0.4 (2009-07-29)
+~~~~~~~~~~~~~~~~
 
 - The selected action, if any, is available in the ``action``
   attribute of a form instance. [malthe]
