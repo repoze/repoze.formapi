@@ -1,4 +1,4 @@
-from collections import defaultdict
+from repoze.formapi.py24 import defaultdict
 
 class Errors(object):
     """Container for errors.

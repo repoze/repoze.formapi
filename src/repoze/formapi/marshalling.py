@@ -1,5 +1,4 @@
-from collections import defaultdict
-
+from repoze.formapi.py24 import defaultdict
 from repoze.formapi.error import Errors
 
 MISSING = object()

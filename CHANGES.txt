@@ -1,6 +1,10 @@
 Changelog
 =========
 
+In next release...
+
+- Added defaultdict emulation class. [malthe]
+
 0.4 (2009-07-29)
 ~~~~~~~~~~~~~~~~
 
