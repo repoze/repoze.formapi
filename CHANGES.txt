@@ -1,12 +1,13 @@
 Changelog
 =========
 
-In next release...
+0.4.1 (2009-07-31)
+------------------
 
 - Added defaultdict emulation class. [malthe]
 
 0.4 (2009-07-29)
-~~~~~~~~~~~~~~~~
+----------------
 
 - The selected action, if any, is available in the ``action``
   attribute of a form instance. [malthe]
@@ -31,19 +32,19 @@ In next release...
   it behave like one would expect when printing etc. [jvloothuis]
 
 0.3.2 (2009-03-09)
-~~~~~~~~~~~~~~~~~~
+------------------
 
 - Shedding unused dependency on 'zope.interface' [jvloothuis]
 
 0.3.1 (2008-10-27)
-~~~~~~~~~~~~~~~~~~
+------------------
 
 - Make it possible to set `prefix` as class attribute. [malthe]
 
 - Fixed issue where action parameters would not get set. [malthe]
 
 0.3 (2008-10-27)
-~~~~~~~~~~~~~~~~
+----------------
 
 - Marshalled data is no longer applied when no parameters are
   available from the request. [malthe]
@@ -53,7 +54,7 @@ In next release...
   error messages. [malthe]
 
 0.2 (2008-10-19)
-~~~~~~~~~~~~~~~~
+----------------
 
 - Created/improved the abilities for custom validation. [jvloothuis]
 
@@ -88,7 +89,7 @@ In next release...
   templates when checking for their existence [seletz]
 
 0.1 (2008-09-25)
-~~~~~~~~~~~~~~~~
+----------------
 
 - Initial release [malthe]
 
