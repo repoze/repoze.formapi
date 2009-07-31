@@ -67,7 +67,7 @@ Changelog
   flow from applying the request to committing changes to a context
   object. [malthe]
 
-- Integrated the converter into the ``form` module. [seletz]
+- Integrated the converter into the ``form`` module. [seletz]
 
 - Added ``ValidationErrors`` object, which evaluates to True if validation
   errors occured. [seletz]

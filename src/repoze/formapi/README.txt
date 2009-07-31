@@ -1,5 +1,5 @@
-Using :mod:`repoze.formapi`
-===========================
+Using `repoze.formapi`
+======================
 
 To create a form you subclass the ``repoze.formapi.Form`` class and
 define the form field definitions in the ``fields`` attribute.
@@ -15,7 +15,7 @@ define the form field definitions in the ``fields`` attribute.
   ...         'playtime': float}
 
 There are many forms for which default values don't apply (e.g. search
-forms or :term:`add forms`); such forms can be instantiated with no
+forms or `add forms`); such forms can be instantiated with no
 arguments:
 
   >>> form = TapeForm()
