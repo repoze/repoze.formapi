@@ -35,3 +35,13 @@ except:
         def __repr__(self):
             return 'defaultdict(%s, %s)' % (self.default_factory,
                                             dict.__repr__(self))
+
+try:
+    any=any
+except NameError:
+    def any(iter):
+        for item in iter:
+            if item:
+                return True
+        return False
+
