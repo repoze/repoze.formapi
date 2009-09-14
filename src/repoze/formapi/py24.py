@@ -37,11 +37,10 @@ except:
                                             dict.__repr__(self))
 
 try:
-    any=any
-except NameError:
+    __builtins__.any
+except AttributeError:
     def any(iter):
         for item in iter:
             if item:
                 return True
         return False
-

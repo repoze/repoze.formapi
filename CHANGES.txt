@@ -1,11 +1,9 @@
 Changelog
 =========
 
-future
-------
+In next release...
 
-- Add any emulation function for python 2.4. [wichert]
-
+- Added ``any`` builtin fallback. [malthe]
 
 0.4.1 (2009-07-31)
 ------------------
