@@ -59,12 +59,12 @@ def marshall(params, fields):
     constraint of the ``age`` field.
 
         >>> data, errors = marshall((("user.age", "ten"),), fields)
-        
+
         >>> data['user']['age']
         'ten'
 
-        >>> errors['user']['age'][0]
-        "invalid literal for int() with base 10: 'ten'"
+        >>> 'ten' in errors['user']['age'][0]
+        True
 
     Note that the ``data`` and ``errors`` dictionaries provide a
     default value of ``None`` for missing entries.
