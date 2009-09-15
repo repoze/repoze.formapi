@@ -167,31 +167,65 @@ The form data will draw defaults from the context.
   >>> form.data['title']
   u'Motorcity Detroit USA Live'
 
-Parameters have priority.
+Request parameters take priority over the context. In the following
+example, we submit the form with trivial input.
 
   >>> request = Request(params=(('asin', u''), ('year', u'')))
   >>> form = TapeForm(context=tape, request=request)
 
-This input does not validate.
+This form input is valid; although ``year`` is an integer field, the
+trivial input is valid and will be assigned a value of ``None``.
 
   >> form.validate()
-  False
+  True
 
-The ``asin`` input validates and is coerced to a string (from
-unicode).
+The ``asin`` input is coerced to a string (from unicode).
 
   >>> form.data['asin']
   ''
 
-The ``year`` input does not validate and is left as-is.
+The ``year`` input is trivial. It's not a required field, so the value
+is ``None`` (treated as a non-input).
+
+  >>> form.data['year'] is None
+  True
+
+Required fields
+---------------
+
+We use the ``required`` method to mark fields required.
+
+  >>> from repoze.formapi import required
+
+Let's continue the example from above. If we make the fields required,
+the input no longer validates.
+
+  >>> TapeForm.fields['year'] = required(int)
+  >>> TapeForm.fields['asin'] = required(str)
+
+The form input is no longer valid.
+
+  >>> form = TapeForm(context=tape, request=request)
+  >>> form.validate()
+  False
 
   >>> form.data['year']
   u''
 
-It's still an error.
+  >>> request = Request(params=(('asin', u'B000001FL8'), ('year', u'1978')))
+  >>> form = TapeForm(context=tape, request=request)
 
-  >>> bool(form.errors['year'])
+This is a valid input. We can expect both required fields to be
+converted and correctly typed.
+
+  >>> form.validate()
   True
+
+  >>> form.data['asin']
+  'B000001FL8'
+
+  >>> form.data['year']
+  1978
 
 Form submission
 ---------------

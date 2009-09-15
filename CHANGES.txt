@@ -3,9 +3,12 @@ Changelog
 
 In next release...
 
-- Fields with a trivial input (empty string) which does not convert to
-  the field type now return the original input string as their
-  value. It's still noted as a validation error. [malthe]
+- Added ``required`` decorator for field types; when we wrap a type
+  with this decorator, inputs that do not validate (even the trivial
+  input of the empty string) are given the input value as-is. Compare
+  this to an optional field (the default setting) where the empty
+  string will be interpreted as a non-input (unless it's a string type
+  or another type which will accept the empty string). [malthe]
 
 0.4.2 (2009-09-14)
 ------------------

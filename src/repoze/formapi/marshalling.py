@@ -1,8 +1,6 @@
 from repoze.formapi.py24 import defaultdict
 from repoze.formapi.error import Errors
 
-MISSING = object()
-
 def marshall(params, fields):
     """marshall(params, fields) -> data, errors
 
@@ -67,14 +65,21 @@ def marshall(params, fields):
         True
 
     Note that the ``data`` and ``errors`` dictionaries provide a
-    default value of ``None`` for missing entries.
+    default value of ``missing`` for missing entries.
+
+        >>> from repoze.formapi.marshalling import missing
+
+    It evaluates to false.
+
+        >>> bool(missing)
+        False
 
         >>> data, errors = marshall((), fields)
 
         >>> 'age' in data['user']
         False
 
-        >>> data['user']['age'] is None
+        >>> data['user']['age'] is missing
         True
 
     The fields structure may end in a list of a simple type.
@@ -168,10 +173,32 @@ def marshall(params, fields):
         >>> data['user']
         ''
 
-     Empty strings are invalid for number fields.
+     Empty strings are trivial for integer fields; it's regarded as a
+     non-input.
+
+        >>> data['age']
+
+     If the field is required, an empty string is an invalid input for
+     a number. Invalid inputs are preserved as-is for required fields.
+
+        >>> from repoze.formapi.marshalling import required
+        >>> fields['age'] = required(int)
+        >>> data, errors = marshall(params, fields)
 
         >>> data['age']
         ''
+
+        >>> bool(errors['age'])
+        True
+
+     The same goes for non-trivial invalid inputs.
+
+        >>> data, errors = marshall((('age', 'ten'),), fields)
+        >>> data['age']
+        'ten'
+
+        >>> bool(errors['age'])
+        True
 
     """
 
@@ -209,6 +236,7 @@ class Marshaller(object):
     resolved; if not set, an empty value is returned.
 
         >>> from repoze.formapi.marshalling import Marshaller
+        >>> from repoze.formapi.marshalling import missing
 
         >>> marshaller = Marshaller({
         ...     'name': str,
@@ -222,10 +250,10 @@ class Marshaller(object):
 
     We'll first demonstrate that valid keys return an empty value.
 
-        >>> marshaller['name'] is None
+        >>> marshaller['name'] is missing
         True
 
-        >>> marshaller['users', 'foo', 'username'] is None
+        >>> marshaller['users', 'foo', 'username'] is missing
         True
 
         >>> marshaller['users', 'foo', 'groups']
@@ -303,7 +331,6 @@ class Marshaller(object):
         >>> bool(marshaller)
         True
 
-
     If the path is not exhausted, a new marshaller instance is
     returned, which curries the path onto new requests.
 
@@ -334,8 +361,8 @@ class Marshaller(object):
         if not isinstance(path, tuple):
             path = (path,)
         path = self.path + tuple(path)
-        value = self.data.get(path, MISSING)
-        if value is not MISSING:
+        value = self.data.get(path, missing)
+        if value is not missing:
             return value
 
         # verify path; we want to raise an exception if the path does
@@ -350,6 +377,8 @@ class Marshaller(object):
 
         if isinstance(data_type, dict):
             return Marshaller(self.fields, self.data, path, self.coerce)
+
+        return missing
 
     def __setitem__(self, path, value):
         if not isinstance(path, tuple):
@@ -389,6 +418,17 @@ class Marshaller(object):
                     value = data_type(value)
                 except:
                     error = True
+                    if not value:
+                        value = None
+
+                # if the returned value does not conform to the type,
+                # raise an exception and set the error flag
+                if not isinstance(value, data_type):
+                    try:
+                        raise ValueError(value)
+                    except:
+                        error = True
+
             self.data[key] = value
 
         if value is not None:
@@ -429,7 +469,7 @@ class Marshaller(object):
                 if key in data:
                     data = data[key]
                 else:
-                    data[key] = defaultdict(lambda: MISSING)
+                    data[key] = defaultdict(lambda: missing)
                     data = data[key]
             data[path[-1]] = value
         return _data
@@ -456,6 +496,14 @@ class Marshaller(object):
             fields = fields[value]
         return fields
 
+def required(cls):
+    class required(cls):
+        def __new__(base, value):
+            if not value:
+                return value
+            return cls.__new__(base, value)
+    return required
+
 class defaultdict(defaultdict):
     __doc__ = defaultdict.__doc__
 
@@ -463,5 +511,11 @@ class defaultdict(defaultdict):
         # change the representation-function; t's an implementation
         # detail that this is a ``defaultdict`` object.
         return dict.__repr__(self)
+
+class Missing(object):
+    def __nonzero__(self):
+        return False
+
+missing = Missing()
 
 # vim: set ft=python ts=4 sw=4 expandtab : 

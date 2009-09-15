@@ -185,9 +185,9 @@ class Data(list):
             except KeyError:
                 continue
 
-            if value is not None:
+            if value is not marshalling.missing:
                 return value
-    
+
     def __setitem__(self, name, value):
         self.tail[name] = value
 
