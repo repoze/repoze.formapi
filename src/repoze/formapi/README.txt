@@ -30,8 +30,6 @@ In a web application, usually we'll anticipate data coming in through
 the request object. Values are then reflected in the form data. We can
 also validate the request against the form fields.
 
-.. note:: There's no inherent concept of required fields.
-
 We pass the request to the form as keyword argument.
 
   >>> request = Request(
