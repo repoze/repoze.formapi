@@ -73,10 +73,10 @@ def marshall(params, fields):
 
         >>> 'age' in data['user']
         False
-        
+
         >>> data['user']['age'] is None
         True
-        
+
     The fields structure may end in a list of a simple type.
 
         >>> fields = {
@@ -90,12 +90,12 @@ def marshall(params, fields):
         >>> params = (
         ...     ("user.friends", "stefan"),
         ...     ("user.friends", "malthe"))
-        
+
         >>> data, errors = marshall(params, fields)
-        
+
     As expected, we get a list. Note that this list items appear in
     the order they appear in the reqeuest parameters.
-    
+
         >>> data['user']['friends']
         ['stefan', 'malthe']
 
@@ -104,11 +104,11 @@ def marshall(params, fields):
         >>> fields = {
         ...     "points": (int,)
         ...     }
-        
+
         >>> params = (("points", 42), ("points", 10))
-        
+
         >>> data, errors = marshall(params, fields)
-        
+
         >>> data['points']
         (42, 10)
 
@@ -140,15 +140,39 @@ def marshall(params, fields):
         >>> params = (
         ...     ("user.stefan.name", "Stefan Eletzhofer"),
         ...     ("user.malthe.name", "Malthe Borch"))
-        
+
         >>> data, errors = marshall(params, fields)
-        
+
     As expected, we get a list. Note that this list items appear in
     the order they appear in the reqeuest parameters.
-    
+
         >>> data['user']['stefan']['name']
         'Stefan Eletzhofer'
-    
+
+    If a trivial input results in a conversion error, the value is set
+    to ``None``.
+
+        >>> fields = {
+        ...     'user': str,
+        ...     'age': int
+        ...     }
+
+        >>> params = (
+        ...     ('user', ''),
+        ...     ('age', ''))
+
+        >>> data, errors = marshall(params, fields)
+
+     Empty strings are valid for string fields.
+
+        >>> data['user']
+        ''
+
+     Empty strings are invalid for number fields.
+
+        >>> data['age']
+        ''
+
     """
 
     data = Marshaller(fields)
@@ -185,7 +209,7 @@ class Marshaller(object):
     resolved; if not set, an empty value is returned.
 
         >>> from repoze.formapi.marshalling import Marshaller
-        
+
         >>> marshaller = Marshaller({
         ...     'name': str,
         ...     'users': {
@@ -197,18 +221,18 @@ class Marshaller(object):
         ...     })
 
     We'll first demonstrate that valid keys return an empty value.
-    
+
         >>> marshaller['name'] is None
         True
-        
+
         >>> marshaller['users', 'foo', 'username'] is None
         True
-        
+
         >>> marshaller['users', 'foo', 'groups']
         []
 
     An exception is raised if an invalid key is tried.
-    
+
         >>> marshaller['users', 'foo', 'bar']
         Traceback (most recent call last):
          ...
@@ -226,15 +250,15 @@ class Marshaller(object):
         >>> marshaller['users', 'foo', 'username'] = 'foo'
 
     Sequences append on assignments.
-        
+
         >>> marshaller['users', 'foo', 'groups'] = 'foo'
         >>> marshaller['users', 'foo', 'groups'] = 'bar'
 
     As expected, we can retrieve the values in exchange for the keys.
-        
+
         >>> marshaller['name']
         'Foo'
-        
+
         >>> marshaller['users', 'foo', 'username']
         'foo'
 
@@ -248,17 +272,17 @@ class Marshaller(object):
 
         >>> marshaller['users', 'foo', 'groups'] = ['bar']
         >>> marshaller['users', 'foo', 'groups']
-        ['bar']    
+        ['bar']
 
     Again, an exception is raised if an invalid key is tried.
-    
+
         >>> marshaller['users', 'foo', 'bar'] = 'baz'
         Traceback (most recent call last):
          ...
         KeyError: 'bar'
 
     Values are attempted coerced to the field type.
-    
+
         >>> marshaller['users', 'foo', 'id'] = '1'
         >>> marshaller['users', 'foo', 'id']
         1
@@ -273,7 +297,7 @@ class Marshaller(object):
     We may always assign ``None``.
 
         >>> marshaller['users', 'foo', 'id'] = None
-        
+
     The truth-value of a non-empty ``Marshaller`` instance is ``True``.
 
         >>> bool(marshaller)
@@ -293,7 +317,7 @@ class Marshaller(object):
 
         >>> tuple(sorted(marshaller['users']['foo']))
         ('groups', 'id', 'username')
-        
+
     """
 
     def __init__(self, fields, data=None, path=(), coerce=True):
@@ -405,7 +429,7 @@ class Marshaller(object):
                 if key in data:
                     data = data[key]
                 else:
-                    data[key] = defaultdict(lambda: None)
+                    data[key] = defaultdict(lambda: MISSING)
                     data = data[key]
             data[path[-1]] = value
         return _data

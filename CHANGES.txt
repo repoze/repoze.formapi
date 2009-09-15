@@ -1,6 +1,12 @@
 Changelog
 =========
 
+In next release...
+
+- Fields with a trivial input (empty string) which does not convert to
+  the field type now return the original input string as their
+  value. It's still noted as a validation error. [malthe]
+
 0.4.2 (2009-09-14)
 ------------------
 

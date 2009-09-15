@@ -31,7 +31,7 @@ the request object. Values are then reflected in the form data. We can
 also validate the request against the form fields.
 
 .. note:: There's no inherent concept of required fields.
-  
+
 We pass the request to the form as keyword argument.
 
   >>> request = Request(
@@ -162,7 +162,7 @@ We can set the context of a form to some object.
   >>> tape = Tape()
 
 The form data will draw defaults from the context.
-  
+
   >>> form = TapeForm(context=tape)
   >>> form.data['title']
   u'Motorcity Detroit USA Live'
@@ -173,7 +173,7 @@ Parameters have priority.
   >>> form = TapeForm(context=tape, request=request)
 
 This input does not validate.
-  
+
   >> form.validate()
   False
 
@@ -187,6 +187,11 @@ The ``year`` input does not validate and is left as-is.
 
   >>> form.data['year']
   u''
+
+It's still an error.
+
+  >>> bool(form.errors['year'])
+  True
 
 Form submission
 ---------------
