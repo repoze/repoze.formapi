@@ -144,6 +144,8 @@ specific field.
   >>> form = CDForm()
   >>> form.validate()
   False
+  >>> 'genre' in form.errors
+  True
   >>> form.errors['genre'][0]
   'Genre is invalid'
 

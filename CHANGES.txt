@@ -10,6 +10,8 @@ In next release...
   string will be interpreted as a non-input (unless it's a string type
   or another type which will accept the empty string). [malthe]
 
+- Add __contains__/has_key support to the Error class. [wichert]
+
 0.4.2 (2009-09-14)
 ------------------
 

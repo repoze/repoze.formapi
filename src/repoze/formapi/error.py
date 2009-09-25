@@ -103,6 +103,10 @@ class Errors(object):
             return self._messages[key]
         return self._dict[key]
 
+    def __contains__(self, key):
+        return key in self._dict
+    has_key = __contains__
+
     def __unicode__(self):
         return u" ".join(self._messages)
 
