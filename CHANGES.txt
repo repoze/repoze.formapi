@@ -3,6 +3,10 @@ Changelog
 
 In next release...
 
+- Fixed ``Errors`` class to use the more obtuse ``__getattr__``
+  override; this fixes an issue where an attribute lookup of
+  ``__class__`` would fail. [malthe]
+
 - Added ``required`` decorator for field types; when we wrap a type
   with this decorator, inputs that do not validate (even the trivial
   input of the empty string) are given the input value as-is. Compare

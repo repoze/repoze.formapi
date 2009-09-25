@@ -123,7 +123,7 @@ class Errors(object):
         self.append(error)
         return self
 
-    def __getattribute__(self, name):
+    def __getattr__(self, name):
         if name in type(self).__dict__:
             return object.__getattribute__(self, name)
         raise AttributeError(name)
