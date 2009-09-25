@@ -41,6 +41,8 @@ it's a valid unicode string, we expect no validation errors.
 
   >>> form.validate()
   True
+  >>> 'title' in form.errors
+  False
   >>> form.data['title']
   u'Motorcity Detroit USA Live'
 
