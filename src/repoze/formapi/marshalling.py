@@ -185,8 +185,8 @@ def marshall(params, fields):
         >>> fields['age'] = required(int)
         >>> data, errors = marshall(params, fields)
 
-        >>> data['age']
-        ''
+        >>> data['age'] is None
+        True
 
         >>> bool(errors['age'])
         True
@@ -423,7 +423,7 @@ class Marshaller(object):
 
                 # if the returned value does not conform to the type,
                 # raise an exception and set the error flag
-                if not isinstance(value, data_type):
+                if not error and not isinstance(value, data_type):
                     try:
                         raise ValueError(value)
                     except:
@@ -496,11 +496,11 @@ class Marshaller(object):
             fields = fields[value]
         return fields
 
-def required(cls):
+def required(cls, msg="Required field"):
     class required(cls):
         def __new__(base, value):
             if not value:
-                return value
+                raise ValueError(msg)
             return cls.__new__(base, value)
     return required
 

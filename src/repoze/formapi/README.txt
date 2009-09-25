@@ -202,7 +202,7 @@ We use the ``required`` method to mark fields required.
 Let's continue the example from above. If we make the fields required,
 the input no longer validates.
 
-  >>> TapeForm.fields['year'] = required(int)
+  >>> TapeForm.fields['year'] = required(int, u"Required field" )
   >>> TapeForm.fields['asin'] = required(str)
 
 The form input is no longer valid.
@@ -211,8 +211,12 @@ The form input is no longer valid.
   >>> form.validate()
   False
 
-  >>> form.data['year']
-  u''
+  >>> form.data['year'] is None
+  True
+
+  The error message is available as well:
+  >>> form.errors['year'][0]
+  'Required field'
 
   >>> request = Request(params=(('asin', u'B000001FL8'), ('year', u'1978')))
   >>> form = TapeForm(context=tape, request=request)
