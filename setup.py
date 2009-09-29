@@ -19,7 +19,7 @@ def read(*rnames):
     return open(os.path.join(os.path.dirname(__file__), *rnames)).read()
 
 setup(name='repoze.formapi',
-      version = '0.4.2',
+      version = '0.4.3',
       description='Minimalistic form library.',
       long_description=read('README.txt') + read('src/repoze/formapi/README.txt'),
       keywords = "forms html validation marshalling",
