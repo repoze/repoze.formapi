@@ -21,7 +21,11 @@ def read(*rnames):
 setup(name='repoze.formapi',
       version = '0.6-dev',
       description='Minimalistic form library.',
-      long_description=read('README.txt') + read('src/repoze/formapi/README.txt'),
+      long_description=(
+          read('README.txt') +
+          read('src/repoze/formapi/README.txt') +
+          read('CHANGES.txt')
+          ),
       keywords = "forms html validation marshalling",
       classifiers = [
           'Development Status :: 5 - Production/Stable',
