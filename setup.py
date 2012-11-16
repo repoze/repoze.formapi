@@ -19,7 +19,7 @@ def read(*rnames):
     return open(os.path.join(os.path.dirname(__file__), *rnames)).read()
 
 setup(name='repoze.formapi',
-      version = '0.5.1-dev',
+      version = '0.5.1',
       description='Minimalistic form library.',
       long_description=(
           read('README.txt') +
