@@ -421,14 +421,6 @@ class Marshaller(object):
                     if not value:
                         value = None
 
-                # if the returned value does not conform to the type,
-                # raise an exception and set the error flag
-                if not error and not isinstance(value, data_type):
-                    try:
-                        raise ValueError(value)
-                    except:
-                        error = True
-
             self.data[key] = value
 
         if value is not None:

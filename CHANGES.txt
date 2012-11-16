@@ -1,6 +1,31 @@
 Changelog
 =========
 
+In next release ...
+
+- Type-checking has been removed from the marshalling code::
+
+    if not error and not isinstance(value, data_type):
+        error = True
+
+  This change was required to support "schema types" such as::
+
+    import re
+
+    match_email = re.compile(
+        r"^(\w&.%#$&'\*+-/=?^_`{}|~]+!)*[\w&.%#$&'"
+        r"\*+-/=?^_`{}|~]+@(([0-9a-z]([0-9a-z-]*[0-9a-z])"
+        r"?\.)+[a-z]{2,6}|([0-9]{1,3}\.){3}[0-9]{1,3})$",
+        re.IGNORECASE).match
+
+    class email(unicode):
+        def __new__(cls, string):
+          if match_email(string):
+              return string
+
+          raise ValueError(u"Not a valid e-mail address.")
+
+
 0.5.0 (2010-05-28)
 ------------------
 
