@@ -493,7 +493,7 @@ def required(cls, msg="Required field"):
         def __new__(base, value):
             if not value:
                 raise ValueError(msg)
-            return cls.__new__(base, value)
+            return cls(value)
     return required
 
 class defaultdict(defaultdict):

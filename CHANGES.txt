@@ -1,6 +1,12 @@
 Changelog
 =========
 
+In next release ...
+
+- Fixed an issue with `required` where the marshaller would not
+  correctly convert a value to the provided value type.
+
+
 0.5.1 (2012-11-16)
 ------------------
 
