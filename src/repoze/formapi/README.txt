@@ -1,6 +1,32 @@
 Using `repoze.formapi`
 ======================
 
+This library helps you marshall and validate form input as well as
+execute form actions.
+
+In the most simple usage, we'll marshall the input data:
+
+  >>> fields = {
+  ...     'items': [int]
+  ... }
+
+The ``marshall`` function takes two arguments: the parameter list and
+the fields definition:
+
+  >>> data, errors = formapi.marshalling.marshall(
+  ...     [('items', 1), ('items', 2), ('other', '...')], fields
+  ... )
+
+There were no errors:
+
+  >>> bool(errors)
+  False
+
+We expect an integer list as the value for ``'item'``:
+
+  >>> data['items']
+  [1, 2]
+
 To create a form you subclass the ``repoze.formapi.Form`` class and
 define the form field definitions in the ``fields`` attribute.
 
@@ -382,4 +408,3 @@ proxied object.
   >>> form.data.save()
   >>> tape.title
   u'FOUR WHEEL DRIVE'
-

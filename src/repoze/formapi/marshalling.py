@@ -483,8 +483,8 @@ class Marshaller(object):
                         raise ValueError(
                             "Must be type '%s' (got '%s')." % (
                             (key.__name__, type(value).__name__)))
-                fields = fields[key]
-                continue
+                    fields = fields[key]
+                    continue
             fields = fields[value]
         return fields
 
