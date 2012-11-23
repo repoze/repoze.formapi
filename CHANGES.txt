@@ -1,6 +1,9 @@
 Changelog
 =========
 
+0.5.3 (2012-11-23)
+------------------
+
 - Fixed an issue where a fields definition with a single entry would
   get incorrectly marshalled when the corresponding data had multiple
   entries.
