@@ -1,6 +1,11 @@
 Changelog
 =========
 
+In next release ...
+
+- Added ``keys`` method to marshaller such that the object can be used
+  as a mapping.
+
 0.5.3 (2012-11-23)
 ------------------
 

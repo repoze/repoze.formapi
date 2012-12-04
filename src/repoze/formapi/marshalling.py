@@ -1,6 +1,7 @@
 from repoze.formapi.py24 import defaultdict
 from repoze.formapi.error import Errors
 
+
 def marshall(params, fields):
     """marshall(params, fields) -> data, errors
 
@@ -41,6 +42,18 @@ def marshall(params, fields):
 
         >>> len(errors)
         0
+
+    We can turn the returned data into a dict:
+
+        >>> d = dict(data)
+        >>> sorted(d.items())
+        [('user', {'user': {'nick': 'fred', 'age': 42, \
+                            'name': 'Fred Kaputnik', 'extra': ''}})]
+
+    Similarly, we can pass the data as keyword arguments:
+
+        >>> (lambda **kwargs: True)(**data)
+        True
 
     To get to the marshalled field data, we use a similar approach.
 
@@ -439,16 +452,27 @@ class Marshaller(object):
     def __iter__(self):
         items = set()
         for path in self.data:
-            if path is not None and tuple(
-                path[:len(self.path)]) == self.path:
-                items.add(path[len(self.path)])
-        return iter(items)
+            if path is None:
+                continue
+
+            length = len(self.path)
+
+            if tuple(path[:length]) == self.path:
+                item = path[length]
+                if item not in items:
+                    yield item
+
+                items.add(item)
+
+    def keys(self):
+        return list(self)
 
     def items(self):
-        items = []
+        return list(self.iteritems())
+
+    def iteritems(self):
         for key in self:
-            items.append((key, self[key]))
-        return items
+            yield (key, self[key])
 
     def marshall(self):
         _data = {}
