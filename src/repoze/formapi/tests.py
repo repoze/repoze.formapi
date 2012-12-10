@@ -51,7 +51,7 @@ def test_suite():
             optionflags=OPTIONFLAGS,
             globs=globs),
         doctest.DocTestSuite(
-            'repoze.formapi.marshalling',
+            'repoze.formapi.parser',
             optionflags=OPTIONFLAGS,
             globs=globs)
         ])

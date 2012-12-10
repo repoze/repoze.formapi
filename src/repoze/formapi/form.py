@@ -1,4 +1,5 @@
-from repoze.formapi import marshalling
+from repoze.formapi.parser import parse
+from repoze.formapi.parser import missing
 
 import types
 import re
@@ -120,8 +121,8 @@ class Form(object):
         else:
             params = ()
 
-        # marshall request parameters
-        data, errors = marshalling.marshall(params, self.fields)
+        # Parse parameter input
+        data, errors = parse(params, self.fields)
 
         if len(params):
             self.data.update(data)
@@ -185,7 +186,7 @@ class Data(list):
             except KeyError:
                 continue
 
-            if value is not marshalling.missing:
+            if value is not missing:
                 return value
 
     def __setitem__(self, name, value):

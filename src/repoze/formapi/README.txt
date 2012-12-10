@@ -1,19 +1,19 @@
 Using `repoze.formapi`
 ======================
 
-This library helps you marshall and validate form input as well as
-execute form actions.
+This library helps you parse, validate and deserialize form input as
+well as execute form actions.
 
-In the most simple usage, we'll marshall the input data:
+In the most simple usage, we'll parse the input data:
 
   >>> fields = {
   ...     'items': [int]
   ... }
 
-The ``marshall`` function takes two arguments: the parameter list and
-the fields definition:
+The ``parse`` function takes two arguments: the parameter list and the
+fields definition:
 
-  >>> data, errors = formapi.marshalling.marshall(
+  >>> data, errors = formapi.parse(
   ...     [('items', 1), ('items', 2), ('other', '...')], fields
   ... )
 

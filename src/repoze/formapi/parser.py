@@ -2,17 +2,18 @@ from repoze.formapi.py24 import defaultdict
 from repoze.formapi.error import Errors
 
 
-def marshall(params, fields):
-    """marshall(params, fields) -> data, errors
+def parse(params, fields):
+    """Return ``(data, errors)`` tuple.
 
-    This function converts and validates the ``params`` tuple of
-    (name, value) pairs.  The data converted is returned in the
-    ``data`` dict.  Errors encountered during conversion are set in
-    the ``errors`` dict.
+    This function parses, converts and validates the parameter
+    sequence (name, value) pairs.
+
+    The converted data is returned as the ``data`` value, while errors
+    encountered during conversion are set in the ``errors`` dict.
 
     The ``fields`` parameter is used to describe the data
     structure. It's a nested dictionary that ends in simple types, or
-    a list of such, e.g.
+    a list of such, e.g.:
 
         >>> fields = {
         ...     "user": {
@@ -23,8 +24,8 @@ def marshall(params, fields):
         ...     }
         ... }
 
-    Using this ``schema-like`` structure, we can convert a list of
-    form request parameters into a data structure (field marshalling).
+    Given a sequence of parameteres, the function returns a data
+    structure that matches the fields definition.
 
         >>> params = (
         ...     ("user.name", "Fred Kaputnik"),
@@ -32,10 +33,10 @@ def marshall(params, fields):
         ...     ("user.age", 42),
         ...     ("user.extra", ""))
 
-    Note that the keys of the parameter tuples are dotted paths.
+    Note that the field names appear as 'dotted paths'.
 
-        >>> from repoze.formapi.marshalling import marshall
-        >>> data, errors = marshall(params, fields)
+        >>> from repoze.formapi.parser import parse
+        >>> data, errors = parse(params, fields)
 
     Since all the tuples in ``params`` are valid, we expect no
     validation errors::
@@ -55,7 +56,7 @@ def marshall(params, fields):
         >>> (lambda **kwargs: True)(**data)
         True
 
-    To get to the marshalled field data, we use a similar approach.
+    To get to the parsed field data, we use a similar approach.
 
         >>> data['user']['name']
         'Fred Kaputnik'
@@ -69,7 +70,7 @@ def marshall(params, fields):
     To illustrate error handling, we can violate the validation
     constraint of the ``age`` field.
 
-        >>> data, errors = marshall((("user.age", "ten"),), fields)
+        >>> data, errors = parse((("user.age", "ten"),), fields)
 
         >>> data['user']['age']
         'ten'
@@ -80,14 +81,14 @@ def marshall(params, fields):
     Note that the ``data`` and ``errors`` dictionaries provide a
     default value of ``missing`` for missing entries.
 
-        >>> from repoze.formapi.marshalling import missing
+        >>> from repoze.formapi.parser import missing
 
     It evaluates to false.
 
         >>> bool(missing)
         False
 
-        >>> data, errors = marshall((), fields)
+        >>> data, errors = parse((), fields)
 
         >>> 'age' in data['user']
         False
@@ -109,7 +110,7 @@ def marshall(params, fields):
         ...     ("user.friends", "stefan"),
         ...     ("user.friends", "malthe"))
 
-        >>> data, errors = marshall(params, fields)
+        >>> data, errors = parse(params, fields)
 
     As expected, we get a list. Note that this list items appear in
     the order they appear in the reqeuest parameters.
@@ -125,7 +126,7 @@ def marshall(params, fields):
 
         >>> params = (("points", 42), ("points", 10))
 
-        >>> data, errors = marshall(params, fields)
+        >>> data, errors = parse(params, fields)
 
         >>> data['points']
         (42, 10)
@@ -140,7 +141,7 @@ def marshall(params, fields):
         ...     }
 
         >>> params = (("users.name", "Foo"),)
-        >>> marshall(params, fields)
+        >>> parse(params, fields)
         Traceback (most recent call last):
          ...
         TypeError: Sequences are only allowed as end-points.
@@ -159,7 +160,7 @@ def marshall(params, fields):
         ...     ("user.stefan.name", "Stefan Eletzhofer"),
         ...     ("user.malthe.name", "Malthe Borch"))
 
-        >>> data, errors = marshall(params, fields)
+        >>> data, errors = parse(params, fields)
 
     As expected, we get a list. Note that this list items appear in
     the order they appear in the reqeuest parameters.
@@ -179,7 +180,7 @@ def marshall(params, fields):
         ...     ('user', ''),
         ...     ('age', ''))
 
-        >>> data, errors = marshall(params, fields)
+        >>> data, errors = parse(params, fields)
 
      Empty strings are valid for string fields.
 
@@ -199,9 +200,9 @@ def marshall(params, fields):
      If the field is required, an empty string is an invalid input for
      a number. Invalid inputs are preserved as-is for required fields.
 
-        >>> from repoze.formapi.marshalling import required
+        >>> from repoze.formapi.parser import required
         >>> fields['age'] = required(int)
-        >>> data, errors = marshall(params, fields)
+        >>> data, errors = parse(params, fields)
 
         >>> data['age'] is None
         True
@@ -211,7 +212,7 @@ def marshall(params, fields):
 
      The same goes for non-trivial invalid inputs.
 
-        >>> data, errors = marshall((('age', 'ten'),), fields)
+        >>> data, errors = parse((('age', 'ten'),), fields)
         >>> data['age']
         'ten'
 
@@ -220,10 +221,10 @@ def marshall(params, fields):
 
     """
 
-    data = Marshaller(fields)
+    data = Parser(fields)
     errors = Errors()
 
-    marshall_errors = Marshaller(fields, coerce=False)
+    parsed_errors = Parser(fields, coerce=False)
 
     for name, value in params:
         path = tuple(name.split('.'))
@@ -237,7 +238,7 @@ def marshall(params, fields):
                 e = e[p]
             e += str(error)
 
-    for path, message in marshall_errors:
+    for path, message in parsed_errors:
         e = errors
         for p in path:
             e = e[path]
@@ -246,16 +247,16 @@ def marshall(params, fields):
     return data, errors
 
 
-class Marshaller(object):
-    """Form fields marshaller.
+class Parser(object):
+    """Form input parser.
 
     Any field name that comforms to the field definition may be
     resolved; if not set, an empty value is returned.
 
-        >>> from repoze.formapi.marshalling import Marshaller
-        >>> from repoze.formapi.marshalling import missing
+        >>> from repoze.formapi.parser import Parser
+        >>> from repoze.formapi.parser import missing
 
-        >>> marshaller = Marshaller({
+        >>> parser = Parser({
         ...     'name': str,
         ...     'users': {
         ...         str: {
@@ -267,99 +268,99 @@ class Marshaller(object):
 
     We'll first demonstrate that valid keys return an empty value.
 
-        >>> marshaller['name'] is missing
+        >>> parser['name'] is missing
         True
 
-        >>> marshaller['users', 'foo', 'username'] is missing
+        >>> parser['users', 'foo', 'username'] is missing
         True
 
-        >>> marshaller['users', 'foo', 'groups']
+        >>> parser['users', 'foo', 'groups']
         []
 
     An exception is raised if an invalid key is tried.
 
-        >>> marshaller['users', 'foo', 'bar']
+        >>> parser['users', 'foo', 'bar']
         Traceback (most recent call last):
          ...
         KeyError: 'bar'
 
-    The truth-value of an empty ``Marshaller`` instance is ``False``.
+    The truth-value of an empty ``Parser`` instance is ``False``.
 
-        >>> bool(marshaller)
+        >>> bool(parser)
         False
 
     We may set values for valid keys.
 
-        >>> marshaller['name'] = 'Foo'
-        >>> marshaller['users', 'foo', 'id'] = 1
-        >>> marshaller['users', 'foo', 'username'] = 'foo'
+        >>> parser['name'] = 'Foo'
+        >>> parser['users', 'foo', 'id'] = 1
+        >>> parser['users', 'foo', 'username'] = 'foo'
 
     Sequences append on assignments.
 
-        >>> marshaller['users', 'foo', 'groups'] = 'foo'
-        >>> marshaller['users', 'foo', 'groups'] = 'bar'
+        >>> parser['users', 'foo', 'groups'] = 'foo'
+        >>> parser['users', 'foo', 'groups'] = 'bar'
 
     As expected, we can retrieve the values in exchange for the keys.
 
-        >>> marshaller['name']
+        >>> parser['name']
         'Foo'
 
-        >>> marshaller['users', 'foo', 'username']
+        >>> parser['users', 'foo', 'username']
         'foo'
 
-        >>> marshaller['users', 'foo', 'id']
+        >>> parser['users', 'foo', 'id']
         1
 
-        >>> marshaller['users', 'foo', 'groups']
+        >>> parser['users', 'foo', 'groups']
         ['foo', 'bar']
 
     Sequences are replaced, if assigned a sequence.
 
-        >>> marshaller['users', 'foo', 'groups'] = ['bar']
-        >>> marshaller['users', 'foo', 'groups']
+        >>> parser['users', 'foo', 'groups'] = ['bar']
+        >>> parser['users', 'foo', 'groups']
         ['bar']
 
     Again, an exception is raised if an invalid key is tried.
 
-        >>> marshaller['users', 'foo', 'bar'] = 'baz'
+        >>> parser['users', 'foo', 'bar'] = 'baz'
         Traceback (most recent call last):
          ...
         KeyError: 'bar'
 
     Values are attempted coerced to the field type.
 
-        >>> marshaller['users', 'foo', 'id'] = '1'
-        >>> marshaller['users', 'foo', 'id']
+        >>> parser['users', 'foo', 'id'] = '1'
+        >>> parser['users', 'foo', 'id']
         1
 
     Coercing must not fail.
 
-        >>> marshaller['users', 'foo', 'id'] = 'one'
+        >>> parser['users', 'foo', 'id'] = 'one'
         Traceback (most recent call last):
          ...
         ValueError: ...
 
     We may always assign ``None``.
 
-        >>> marshaller['users', 'foo', 'id'] = None
+        >>> parser['users', 'foo', 'id'] = None
 
-    The truth-value of a non-empty ``Marshaller`` instance is ``True``.
+    The truth-value of a non-empty ``Parser`` instance is ``True``.
 
-        >>> bool(marshaller)
+        >>> bool(parser)
         True
 
-    If the path is not exhausted, a new marshaller instance is
+    If the path is not exhausted, a new parser instance is
     returned, which curries the path onto new requests.
 
-        >>> marshaller['users']['foo']['username']
+        >>> parser['users']['foo']['username']
         'foo'
 
     Each segment is iterable.
 
-        >>> tuple(marshaller['users'])
+        >>> tuple(parser['users'])
         ('foo',)
 
-        >>> tuple(sorted(marshaller['users']['foo']))
+        >>> tuple(sorted(parser['users']['foo']))
         ('groups', 'id', 'username')
 
     """
@@ -393,7 +394,7 @@ class Marshaller(object):
             return ()
 
         if isinstance(data_type, dict):
-            return Marshaller(self.fields, self.data, path, self.coerce)
+            return Parser(self.fields, self.data, path, self.coerce)
 
         return missing
 
@@ -454,7 +455,7 @@ class Marshaller(object):
         return self.data.get(None, False)
 
     def __repr__(self):
-        data = self.marshall()
+        data = self.parse()
         return repr(data)
 
     def __iter__(self):
@@ -482,7 +483,7 @@ class Marshaller(object):
         for key in self:
             yield (key, self[key])
 
-    def marshall(self):
+    def parse(self):
         _data = {}
         for path, value in self.data.items():
             if path is None:
