@@ -1,7 +1,7 @@
 Changelog
 =========
 
-In next release ...
+- The ``marshalling`` module has been renamed to ``parser``.
 
 - Fixed issue where an integer would cause an error even when not
   required.

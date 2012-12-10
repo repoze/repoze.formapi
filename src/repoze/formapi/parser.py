@@ -1,3 +1,5 @@
+import pprint
+
 from repoze.formapi.py24 import defaultdict
 from repoze.formapi.error import Errors
 
@@ -46,10 +48,8 @@ def parse(params, fields):
 
     We can turn the returned data into a dict:
 
-        >>> d = dict(data)
-        >>> sorted(d.items())
-        [('user', {'user': {'nick': 'fred', 'age': 42, \
-                            'name': 'Fred Kaputnik', 'extra': ''}})]
+        >>> print repr(data)
+        {'user': {'age': 42, 'extra': '', 'name': 'Fred Kaputnik', 'nick': 'fred'}}
 
     Similarly, we can pass the data as keyword arguments:
 
@@ -535,9 +535,7 @@ class defaultdict(defaultdict):
     __doc__ = defaultdict.__doc__
 
     def __repr__(self):
-        # change the representation-function; t's an implementation
-        # detail that this is a ``defaultdict`` object.
-        return dict.__repr__(self)
+        return pprint.pformat(dict(self))
 
 
 class Missing(object):

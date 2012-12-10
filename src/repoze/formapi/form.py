@@ -86,13 +86,13 @@ class Form(object):
             if params is not None:
                 raise ValueError(
                     "Can't provide both ``params`` and ``request``.")
-            params = request.params
+            params = request.params.items()
 
         # find action parameters
         action_params = {}
         if prefix is not None and params is not None:
             re_prefix = re.compile(r'^%s[._-](?P<name>.*)' % prefix)
-            for key, value in params.items():
+            for key, value in params:
                 if key == prefix:
                     action_params[None] = value
                 else:
@@ -117,7 +117,7 @@ class Form(object):
             prefix is None or \
             filter(None, actions) or \
             len(actions) == 0 and action_params.get(None) is not None):
-            params = params.items()
+            params = list(params)
         else:
             params = ()
 

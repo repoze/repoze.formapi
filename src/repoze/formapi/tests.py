@@ -33,7 +33,11 @@ def test_suite():
 
     globs = dict(
         Request=Request,
-        formapi=formapi
+        Form=formapi.Form,
+        Proxy=formapi.Proxy,
+        action=formapi.action,
+        validator=formapi.validator,
+        required=formapi.required,
         )
 
     return unittest.TestSuite([
