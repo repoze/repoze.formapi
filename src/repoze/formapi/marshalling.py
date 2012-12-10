@@ -191,6 +191,11 @@ def marshall(params, fields):
 
         >>> data['age']
 
+     This is not an error:
+
+        >>> str(errors['age'])
+        ''
+
      If the field is required, an empty string is an invalid input for
      a number. Invalid inputs are preserved as-is for required fields.
 
@@ -224,15 +229,13 @@ def marshall(params, fields):
         path = tuple(name.split('.'))
         try:
             data[path] = value
-        except ValueError, error:
+        except KeyError:
+            continue
+        except ValueError as error:
             e = errors
             for p in path:
                 e = e[p]
             e += str(error)
-        except KeyError:
-            # parameter does not match this form field definition; we
-            # can safely disregard it.
-            continue
 
     for path, message in marshall_errors:
         e = errors
@@ -241,6 +244,7 @@ def marshall(params, fields):
         e += message
 
     return data, errors
+
 
 class Marshaller(object):
     """Form fields marshaller.
@@ -411,7 +415,7 @@ class Marshaller(object):
                 value = (value,)
 
             for v in value:
-                if v is not None and self.coerce and not isinstance(v, data_type[0]):
+                if v is not None and self.coerce:
                     try:
                         v = data_type[0](v)
                     except:
@@ -426,12 +430,16 @@ class Marshaller(object):
                     else:
                         self.data[key] = (v,)
         else:
-            if value is not None and self.coerce and not isinstance(value, data_type):
+            if value is not None and self.coerce:
                 try:
                     value = data_type(value)
-                except:
+                except MissingError:
                     error = True
-                    if not value:
+                    value = None
+                except:
+                    if value:
+                        error = True
+                    else:
                         value = None
 
             self.data[key] = value
@@ -504,7 +512,7 @@ class Marshaller(object):
                 if key in (str, unicode, int):
                     # make sure value conforms to data type
                     if not isinstance(value, key):
-                        raise ValueError(
+                        raise TypeError(
                             "Must be type '%s' (got '%s')." % (
                             (key.__name__, type(value).__name__)))
                     fields = fields[key]
@@ -512,13 +520,15 @@ class Marshaller(object):
             fields = fields[value]
         return fields
 
+
 def required(cls, msg="Required field"):
     class required(cls):
         def __new__(base, value):
             if not value:
-                raise ValueError(msg)
+                raise MissingError(msg)
             return cls(value)
     return required
+
 
 class defaultdict(defaultdict):
     __doc__ = defaultdict.__doc__
@@ -528,10 +538,17 @@ class defaultdict(defaultdict):
         # detail that this is a ``defaultdict`` object.
         return dict.__repr__(self)
 
+
 class Missing(object):
     def __nonzero__(self):
         return False
 
+
+class MissingError(ValueError):
+    pass
+
+
 missing = Missing()
 
-# vim: set ft=python ts=4 sw=4 expandtab : 
+
+# vim: set ft=python ts=4 sw=4 expandtab :

@@ -1,6 +1,11 @@
 Changelog
 =========
 
+In next release ...
+
+- Fixed issue where an integer would cause an error even when not
+  required.
+
 0.5.4 (2012-12-04)
 ------------------
 
