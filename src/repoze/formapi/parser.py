@@ -232,7 +232,7 @@ def parse(params, fields):
             data[path] = value
         except KeyError:
             continue
-        except ValueError as error:
+        except ValueError, error:
             e = errors
             for p in path:
                 e = e[p]
