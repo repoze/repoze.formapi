@@ -45,6 +45,36 @@ Let's take a look at the data:
 >>> data
 {'action': u'submit', 'items': [1, 2]}
 
+
+Types
+=====
+
+In the previous example, we used Python's built-in data types: ``int``
+and ``unicode``.
+
+However, you can use any callable as the data type. Note that if the
+callable raises a ``KeyError``, then it's simply ignored.
+
+Let's try an example:
+
+>>> data, errors = parse((('foo', 'bar'), ('baz', 'boo'), ('baz', 'qux')), {
+...     'foo': str.upper,
+...     'baz': {'boo': 'yes'}.__getitem__,
+... })
+
+What can we expect in ``data``?
+
+The ``'foo'`` parameter will be uppercased, the first ``'baz'``
+resolves to ``'yes'``, while the other raises a ``KeyError`` and is
+ignored.
+
+>>> data
+{'foo': 'BAR', 'baz': 'yes'}
+
+It's useful to remember that if you want a parameter to be ignored,
+simply raise a ``KeyError``.
+
+
 Forms
 =====
 

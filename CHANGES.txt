@@ -1,6 +1,11 @@
 Changelog
 =========
 
+In next release ...
+
+- Added support for the field definition callable to raise a
+  ``KeyError`` exception such that the input is ignored.
+
 0.6 (2012-12-10)
 ----------------
 

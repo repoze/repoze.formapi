@@ -434,6 +434,8 @@ class Parser(object):
             if value is not None and self.coerce:
                 try:
                     value = data_type(value)
+                except KeyError:
+                    raise
                 except MissingError:
                     error = True
                     value = None
